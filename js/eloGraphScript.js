@@ -68,7 +68,7 @@ let maxLength = 1;
 let maxLengthIndex = 0;
 let openedStats = '';
 
-let summoners_graph = []
+let summoners_graph = [];
 let ladder = [];
 let counter = 0;
 let uniqueCounter = 0;
@@ -296,8 +296,21 @@ const initCards = (allData, champInfo, versions) => {
       currentSession = d.session;
       let session = sessions.find(s => s.id === d.session);
       let newSessionEl = document.createElement('div');
+      sessionHiddenVisibility
+      if(curvesHiddenVisibility && curvesHiddenVisibility[d.name]){
+        newEl.classList.add('!hidden');
+      } else {
+        newEl.classList.add('!flex');
+      }
+      let hiddenCount = 0;
+      session.summoners.forEach(summoner => {
+        hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
+      });
+      let display = '!block';
+      if(hiddenCount === s.summoners.length)
+        display = '!hidden';
       newSessionEl.innerHTML += `
-        <div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold">
+        <div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold ${display}">
           <div class="inline-flex items-center">
             <span>SESSION: ${session.wins}</span>
             <span class="my-0 mx-[1px] text-[16px] font-normal opacity-40">/</span>
@@ -308,6 +321,7 @@ const initCards = (allData, champInfo, versions) => {
         </div>
       `;
       gameCards.append(newSessionEl);
+      session.element = newSessionEl;
     }
     
     let escapedName = encodeURIComponent(d.name.replace('#', '-'));
@@ -484,10 +498,10 @@ const formatData1 = () => {
 
     let summoner_graph = summoners_graph.find(p => p.name === g.name);
     if (!summoner_graph){
-      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
-      summoner_graph = summoners_graph[index_new_sum -1]
+      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false});
+      summoner_graph = summoners_graph[index_new_sum -1];
     }
-    summoner_graph.nbGame+=1
+    summoner_graph.nbGame+=1;
 
     if(y < summoner_graph.minY)
       summoner_graph.minY = y;
@@ -546,12 +560,14 @@ const formatData1 = () => {
         games: 0,
         wins: 0,
         loses: 0,
+        summoners: [],
       });
       session = sessions[sIndex - 1];
     }
     session.games += d.outcome < 2 ? 1 : 0;
     session.wins += d.outcome === 1 ? 1 : 0;
     session.loses += d.outcome === 0 ? 1 : 0;
+    !session.summoners.includes(d.name) ? session.summoners.push(d.name) : null;
   });
   return allData;
 };
@@ -872,26 +888,7 @@ const initChart = () => {
               usePointStyle: true,
               pointStyle: 'rectRounded'
             },
-            onClick: (event, legendItem, legend) => {
-              Chart.defaults.plugins.legend.onClick(event, legendItem, legend);
-              
-              allData.forEach(d => {
-                if(d.name === legendItem.text) {
-                  if(legendItem.hidden){
-                    d.element.classList.remove('!flex');
-                    d.element.classList.add('!hidden');
-                  } else {
-                    d.element.classList.remove('!hidden');
-                    d.element.classList.add('!flex');
-                  }
-                }
-              });
-              
-              let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
-              let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
-              localStorage.setItem("curves-hidden-visibility", JSON.stringify(newCurvesHiddenVisibility));
-            }
-            ,onClick: (e, legendItem, legend) => {
+            onClick: (e, legendItem, legend) => {
 
               let summoner_graph = summoners_graph.find(p => p.name === legendItem.text);
               const index = legendItem.datasetIndex;
@@ -906,18 +903,47 @@ const initChart = () => {
                 ci.show(index);
                 legendItem.hidden = false;
                 summoner_graph.hidden = false;
-             }
+              }
 
-            const visibleData = summoners_graph.filter(item => !item.hidden);
+              const visibleData = summoners_graph.filter(item => !item.hidden);
 
-            const new_minY = Math.min(...visibleData.map(item => item.minY));
-            const new_maxY = Math.max(...visibleData.map(item => item.maxY));
-            const new_maxX = Math.max(...visibleData.map(item => item.nbGame));
+              const new_minY = Math.min(...visibleData.map(item => item.minY));
+              const new_maxY = Math.max(...visibleData.map(item => item.maxY));
+              const new_maxX = Math.max(...visibleData.map(item => item.nbGame));
 
-            stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100
-            stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100
-            stackedLine.options.scales.x.max = new_maxX +1
-            stackedLine.update();
+              stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100;
+              stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100;
+              stackedLine.options.scales.x.max = new_maxX +1;
+              stackedLine.update();
+              
+              allData.forEach(d => {
+                if(d.name === legendItem.text) {
+                  if(legendItem.hidden){
+                    d.element.classList.remove('!flex');
+                    d.element.classList.add('!hidden');
+                  } else {
+                    d.element.classList.remove('!hidden');
+                    d.element.classList.add('!flex');
+                  }
+                }
+              });
+              sessions.forEach(s => {
+                let hiddenCount = 0;
+                s.summoners.forEach(summoner => {
+                  hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
+                });
+                if(hiddenCount === s.summoners.length){
+                  s.element.classList.remove('!block');
+                  s.element.classList.add('!hidden');
+                } else {
+                  s.element.classList.remove('!hidden');
+                  s.element.classList.add('!block');
+                }
+              });
+              
+              let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+              let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
+              localStorage.setItem("curves-hidden-visibility", JSON.stringify(newCurvesHiddenVisibility));
             }
           },
           tooltip: {
