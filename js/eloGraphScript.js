@@ -479,9 +479,8 @@ const formatData1 = () => {
       let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
       summoner_graph = summoners_graph[index_new_sum -1]
     }
-    else{
-      summoner_graph.nbGame+=1
-    }
+    summoner_graph.nbGame+=1
+
     if(y < summoner_graph.minY)
       summoner_graph.minY = y;
     if(y > summoner_graph.maxY)
@@ -864,7 +863,7 @@ const initChart = () => {
 
             stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100
             stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100
-            stackedLine.options.scales.x.max = new_maxX
+            stackedLine.options.scales.x.max = new_maxX +1
             stackedLine.update();
             }
           },
