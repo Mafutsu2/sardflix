@@ -92,8 +92,6 @@ const getUniqueCounter = () => {
 window.onload = () => {
   getMatches();
   getLps();
-  // document.getElementById('bb').onclick = () => {stackedLine.resize();}
-  document.getElementById('bb').onclick = () => {stackedLine.options.scales.y.min = 400;stackedLine.update(); }
   document.addEventListener("scroll", (event) => {
     if(!isScrolling) {
       isScrolling = true;
@@ -483,7 +481,7 @@ const formatData1 = () => {
         summoners[g.name] = y;
       }
     });
-    
+
     let summoner_graph = summoners_graph.find(p => p.name === g.name);
     if (!summoner_graph){
       let aaaa = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
