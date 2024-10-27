@@ -580,6 +580,7 @@ const formatData2 = (allData) => {
       }
     });
     
+    let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
     newUserDatasets.push({
       label: s.name,
       data: playerData,
@@ -596,6 +597,7 @@ const formatData2 = (allData) => {
         borderDash: ctx => playerData[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
       },
       order: s.order,
+      hidden: curvesHiddenVisibility && JSON.parse(curvesHiddenVisibility)[s.name] ? true : false,
     });
   });
   return newUserDatasets;
@@ -824,6 +826,12 @@ const initChart = () => {
               filter: (item, chartData) => !tiers.some(t => t.name === item.text),
               usePointStyle: true,
               pointStyle: 'rectRounded'
+            },
+            onClick: (event, legendItem, legend) => {
+              Chart.defaults.plugins.legend.onClick(event, legendItem, legend);
+              let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+              let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
+              localStorage.setItem("curves-hidden-visibility", JSON.stringify(newCurvesHiddenVisibility));
             }
           },
           tooltip: {
