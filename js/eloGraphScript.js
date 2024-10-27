@@ -214,6 +214,9 @@ const initCurrentGameCards = async(versions) => {
 };
 
 const initCards = (allData, champInfo, versions) => {
+  let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+  curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
+  
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
   allData.forEach(d => {
@@ -243,6 +246,11 @@ const initCards = (allData, champInfo, versions) => {
       newEl.className = 'card remake';
       hoverClassName = 'remakeHover';
       lpDiff = `(${d.lpDiff})`;
+    }
+    if(curvesHiddenVisibility && curvesHiddenVisibility[d.name]){
+      newEl.classList.add('!hidden');
+    } else {
+      newEl.classList.add('!flex');
     }
     if(d.lpDiff === null)
       lpDiff = '';
@@ -775,16 +783,32 @@ const initChart = () => {
                 if(!isScrolling) {
                   currentGame.element.scrollIntoView({behavior: "smooth", block: "center"});
                   switch(currentGame.outcome) {
-                    case 1: currentGame.element.className = 'card winHover'; break;
-                    case 0: currentGame.element.className = 'card loseHover'; break;
-                    default: currentGame.element.className = 'card remakeHover';
+                    case 1:
+                      currentGame.element.classList.remove('win');
+                      currentGame.element.classList.add('winHover');
+                      break;
+                    case 0:
+                      currentGame.element.classList.remove('lose');
+                      currentGame.element.classList.add('loseHover');
+                      break;
+                    default:
+                      currentGame.element.classList.remove('remake');
+                      currentGame.element.classList.add('remakeHover');
                   }
                 }
               } else {
                 switch(currentGame.outcome) {
-                  case 1: currentGame.element.className = 'card win'; break;
-                  case 0: currentGame.element.className = 'card lose'; break;
-                  default: currentGame.element.className = 'card remake';
+                  case 1:
+                    currentGame.element.classList.remove('winHover');
+                    currentGame.element.classList.add('win');
+                    break;
+                  case 0:
+                    currentGame.element.classList.remove('loseHover');
+                    currentGame.element.classList.add('lose');
+                    break;
+                  default:
+                    currentGame.element.classList.remove('remakeHover');
+                    currentGame.element.classList.add('remake');
                 }
               }
             });
@@ -798,9 +822,17 @@ const initChart = () => {
             allData.forEach(d => {
               if(d.element) {
                 switch(d.outcome) {
-                  case 1: d.element.className = 'card win'; break;
-                  case 0: d.element.className = 'card lose'; break;
-                  default: d.element.className = 'card remake';
+                  case 1:
+                    d.element.classList.remove('winHover');
+                    d.element.classList.add('win');
+                    break;
+                  case 0:
+                    d.element.classList.remove('loseHover');
+                    d.element.classList.add('lose');
+                    break;
+                  default:
+                    d.element.classList.remove('remakeHover');
+                    d.element.classList.add('remake');
                 }
               }
             });
@@ -829,6 +861,19 @@ const initChart = () => {
             },
             onClick: (event, legendItem, legend) => {
               Chart.defaults.plugins.legend.onClick(event, legendItem, legend);
+              
+              allData.forEach(d => {
+                if(d.name === legendItem.text) {
+                  if(legendItem.hidden){
+                    d.element.classList.remove('!flex');
+                    d.element.classList.add('!hidden');
+                  } else {
+                    d.element.classList.remove('!hidden');
+                    d.element.classList.add('!flex');
+                  }
+                }
+              });
+              
               let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
               let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
               localStorage.setItem("curves-hidden-visibility", JSON.stringify(newCurvesHiddenVisibility));
