@@ -68,6 +68,7 @@ let maxLength = 1;
 let maxLengthIndex = 0;
 let openedStats = '';
 
+let summoners_graph = []
 let ladder = [];
 let counter = 0;
 let uniqueCounter = 0;
@@ -472,6 +473,19 @@ const formatData1 = () => {
         summoners[g.name] = y;
       }
     });
+
+    let summoner_graph = summoners_graph.find(p => p.name === g.name);
+    if (!summoner_graph){
+      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
+      summoner_graph = summoners_graph[index_new_sum -1]
+    }
+    else{
+      summoner_graph.nbGame+=1
+    }
+    if(y < summoner_graph.minY)
+      summoner_graph.minY = y;
+    if(y > summoner_graph.maxY)
+      summoner_graph.maxY = y;
     
     if(y < minY)
       minY = y;
@@ -824,6 +838,34 @@ const initChart = () => {
               filter: (item, chartData) => !tiers.some(t => t.name === item.text),
               usePointStyle: true,
               pointStyle: 'rectRounded'
+            }
+            ,onClick: (e, legendItem, legend) => {
+
+              let summoner_graph = summoners_graph.find(p => p.name === legendItem.text);
+              const index = legendItem.datasetIndex;
+              const ci = legend.chart;
+              
+              // Base on click action, need because overdrive
+              if (ci.isDatasetVisible(index)) {
+                summoner_graph.hidden = true;
+                ci.hide(index);
+                legendItem.hidden = true;
+              } else {
+                ci.show(index);
+                legendItem.hidden = false;
+                summoner_graph.hidden = false;
+             }
+
+            const visibleData = summoners_graph.filter(item => !item.hidden);
+
+            const new_minY = Math.min(...visibleData.map(item => item.minY));
+            const new_maxY = Math.max(...visibleData.map(item => item.maxY));
+            const new_maxX = Math.max(...visibleData.map(item => item.nbGame));
+
+            stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100
+            stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100
+            stackedLine.options.scales.x.max = new_maxX
+            stackedLine.update();
             }
           },
           tooltip: {
