@@ -115,7 +115,7 @@ const openOPGG = (url) => {
   return false;
 };
 
-let minY = ladder[ladder.length - 1].max, maxY = 0;
+let minY = 0, maxY = ladder[ladder.length - 1].max, maxX = 0;
 const getMatches = async() => {
   const response = await fetch('https://api.sardflix.com/matches');
   if(response.status !== 200) {
@@ -296,18 +296,12 @@ const initCards = (allData, champInfo, versions) => {
       currentSession = d.session;
       let session = sessions.find(s => s.id === d.session);
       let newSessionEl = document.createElement('div');
-      sessionHiddenVisibility
-      if(curvesHiddenVisibility && curvesHiddenVisibility[d.name]){
-        newEl.classList.add('!hidden');
-      } else {
-        newEl.classList.add('!flex');
-      }
       let hiddenCount = 0;
       session.summoners.forEach(summoner => {
         hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
       });
       let display = '!block';
-      if(hiddenCount === s.summoners.length)
+      if(hiddenCount === session.summoners.length)
         display = '!hidden';
       newSessionEl.innerHTML += `
         <div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold ${display}">
@@ -425,6 +419,8 @@ const findSummonerNextGame = (game, index) => {
 };
 
 const formatData1 = () => {
+  let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+  curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
   let fakeSecond = 2000;//Seconds to remove from games so that lp change dont happen before game finish. Otherwise it falsly marks the game as a dodge.
   let allData = [];
   let summoners = {};
@@ -498,7 +494,7 @@ const formatData1 = () => {
 
     let summoner_graph = summoners_graph.find(p => p.name === g.name);
     if (!summoner_graph){
-      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false});
+      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden: curvesHiddenVisibility[g.name] ? true : false});
       summoner_graph = summoners_graph[index_new_sum -1];
     }
     summoner_graph.nbGame+=1;
@@ -507,11 +503,6 @@ const formatData1 = () => {
       summoner_graph.minY = y;
     if(y > summoner_graph.maxY)
       summoner_graph.maxY = y;
-    
-    if(y < minY)
-      minY = y;
-    if(y > maxY)
-      maxY = y;
     
     if(g.is_victory <= 1) {
       let cInfo = champInfo.find(c => c.id === g.champion_id);
@@ -569,6 +560,12 @@ const formatData1 = () => {
     session.loses += d.outcome === 0 ? 1 : 0;
     !session.summoners.includes(d.name) ? session.summoners.push(d.name) : null;
   });
+  
+  const visibleData = summoners_graph.filter(item => !item.hidden);
+
+  minY = Math.min(...visibleData.map(item => item.minY));
+  maxY = Math.max(...visibleData.map(item => item.maxY));
+  maxX = Math.max(...visibleData.map(item => item.nbGame));
   return allData;
 };
 
