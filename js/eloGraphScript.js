@@ -476,8 +476,8 @@ const formatData1 = () => {
 
     let summoner_graph = summoners_graph.find(p => p.name === g.name);
     if (!summoner_graph){
-      let aaaa = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
-      summoner_graph = summoners_graph[aaaa -1]
+      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
+      summoner_graph = summoners_graph[index_new_sum -1]
     }
     else{
       summoner_graph.nbGame+=1
