@@ -1,0 +1,308 @@
+/*------------------------
+--------Top-Options-------
+------------------------*/
+
+#topOptions {
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#nav {
+  display: flex;
+  justify-content: center;
+  width: 300px;
+}
+
+#nav > div {
+  display: flex;
+  margin: 4px;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-out;
+}
+#nav > div:hover {
+  background-color: rgb(60, 60, 60);
+}
+#nav > .active {
+  border-radius: 6px 6px 0 0;
+  border-bottom: solid 4px #46954a;
+}
+
+#nav > #discord {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 20px 10px 10px;
+  padding: 0;
+  cursor: pointer;
+}
+#nav > #discord:hover {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+#nav > #discord > div:nth-child(2) {
+  position: relative;
+  display: flex;
+  width: 28px;
+  height: 28px;
+  border-radius: 28px;
+  overflow: hidden;
+}
+#nav > #discord > div:nth-child(1) {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 25px;
+  aborder: solid 2px rgba(180, 180, 180, 0.3);
+  background-color: rgba(40, 40, 40, 0.4);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+#nav > #discord > div:nth-child(1):hover {
+  opacity: 1;
+}
+#nav .material-symbols-rounded {
+  font-size: 28px;
+  color: rgba(180, 180, 180, 1);
+}
+
+#search {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+#searchBox {
+  font-family: 'Roboto';
+  width: 300px;
+  padding: 8px 16px;
+  font-size: 16px;
+  color: rgb(220, 220, 220);
+  border: none;
+  border-radius: 6px;
+  background-color: rgb(60, 60, 60);
+  transition: background-color 0.2s ease-out;
+  outline: none;
+}
+#searchBox:hover {
+  background-color: rgb(80, 80, 80);
+}
+#searchBox:focus {
+  background-color: rgb(80, 80, 80);
+}
+
+#searchButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 8px;
+  color: rgb(100, 100, 100);
+  cursor: pointer;
+  transition: color 0.2s ease-out;
+}
+#searchButton:hover {
+  color: rgb(200, 200, 200);
+}
+
+.material-symbols-rounded {
+  font-size: 32px;
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24;
+}
+
+#other {
+  margin-top: 10px;
+}
+
+/*#sort {
+  padding: 6px;
+  border: none;
+  border-radius: 4px;
+  color: rgb(220, 220, 220);
+  background-color: rgb(60, 60, 60);
+  outline: none;
+}*/
+
+/*------------------------
+-------Left-Options-------
+------------------------*/
+
+#leftOptions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  margin-top: 20px;
+  width: 300px;
+}
+
+#sort {
+  padding: 10px;
+  z-index: 10;
+}
+
+#selectedSort {
+  cursor: pointer;
+}
+
+#date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%
+}
+
+#datepicker {
+  display: none;
+}
+
+.easepick-wrapper {
+  transform: scale(0.9);
+}
+
+.container.amp-plugin .calendars .calendar>.header .month-name select {
+  background-color: var(--color-bg-default);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-fg-default);
+}
+
+.preset-plugin-container {
+  padding-bottom: 0;
+}
+
+/*------------------------
+-----------Tags-----------
+------------------------*/
+
+#games {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+#authors {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.tags {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  margin: 0 4px 4px 0;
+  padding: 1px 2px 1px 6px;
+  border-radius: 100px;
+  color: white;
+  background-color: purple;
+}
+
+.tagText {
+  font-size: 12px;
+  line-height: 12px;
+}
+
+.tagRemove {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.idk {
+  display: flex;
+  align-items: center;
+}
+
+.searchTag {
+  flex-grow: 1;
+  font-family: 'Roboto';
+  margin-top: 4px;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: rgb(220, 220, 220);
+  border: none;
+  border-radius: 6px;
+  background-color: rgb(60, 60, 60);
+  transition: background-color 0.2s ease-out;
+  outline: none;
+}
+.searchTag:hover {
+  background-color: rgb(80, 80, 80);
+}
+.searchTag:focus {
+  background-color: rgb(80, 80, 80);
+}
+#searchAuthor {
+  border-radius: 6px 0 0 6px;
+}
+
+.tagLoading {
+  margin-top: 4px;
+  width: 29px;
+  height: 29px;
+  border-radius: 0 6px 6px 0;
+  background-color: rgb(60, 60, 60);
+}
+
+.tagLoading > img {
+  padding: 1px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  box-sizing: border-box;
+  visibility: hidden;
+}
+
+.autocomplete {
+  position: relative;
+}
+
+.autocomplete > div {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  background-color: rgb(60, 60, 60);
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.autocomplete > div::-webkit-scrollbar { 
+  display: none;
+}
+
+.autocomplete > div > div {
+  padding: 4px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-out;
+}
+.autocomplete > div > div:hover {
+  padding: 4px;
+  background-color: rgb(80, 80, 80);
+}
+
+.autocompleteHide {
+  display: none !important;
+}
