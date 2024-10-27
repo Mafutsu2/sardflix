@@ -1,0 +1,30 @@
+.player {
+  display: flex;
+  align-items: center;
+  margin: 20px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: rgba(60, 60, 60, 1);
+  border: solid 1px rgb(60, 60, 60);
+  transition: background-color 0.2s ease-out, border 0.2s ease-out;
+  cursor: pointer;
+}
+
+.activeSong {
+  background-color: rgba(232, 201, 77, 0.1);
+  border: solid 1px rgb(232, 201, 77);
+}
+
+.name {
+  margin: 0 20px;
+  flex-grow: 1;
+}
+
+.download {
+  color: rgb(180, 180, 180);
+  transition: color 0.1s ease-out;
+}
+
+.download:hover {
+  color: #46954a;
+}

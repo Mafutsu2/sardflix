@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 80px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: default;
+  transition: background-color 0.3s ease-out;
+}
+
+.win {
+  background-color: #5260e326;
+  border: solid 1px #5260e3;
+}
+
+.lose {
+  background-color: #e85f5f26;
+  border: solid 1px #e85f5f;
+}
+
+.remake {
+  background-color: #5c5c5c26;
+  border: solid 1px #5c5c5c;
+}
+
+.winHover {
+  background-color: #8e97e640;
+  border: solid 1px #8e97e6;
+}
+
+.loseHover {
+  background-color: #e3949440;
+  border: solid 1px #e39494;
+}
+
+.remakeHover {
+  background-color: #a6a6a640;
+  border: solid 1px #a6a6a6;
+}
+
+#champInfo::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+#champInfo::-webkit-scrollbar-track {
+  background: rgb(60, 60, 60); 
+}
+
+#champInfo::-webkit-scrollbar-thumb {
+  background: rgb(80, 80, 80); 
+}
+
+#champInfo::-webkit-scrollbar-thumb:hover {
+  background: rgb(100, 100, 100); 
+}

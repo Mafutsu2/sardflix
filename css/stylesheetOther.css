@@ -1,0 +1,113 @@
+body {
+  margin-bottom: 0 !important;
+}
+
+#songs {
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  max-width: 1400px;
+}
+
+.material-symbols-rounded {
+  font-size: 32px;
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24;
+}
+
+#player {
+  padding: 10px 20px;
+  align-self: stretch;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  background-color: rgb(40, 40, 40);
+}
+
+#player > div {
+  line-height: 14px;
+}
+
+#progress {
+  flex-grow: 1;
+  display: flex;
+}
+
+.time {
+  margin: 0 10px;
+  font-size: 14px;
+}
+
+#timeCurrent {
+  margin: 0 20px 0 10px;
+}
+
+#timeTotal {
+  margin-left: 20px;
+}
+
+
+
+.playerControls {
+  color: rgb(180, 180, 180);
+  cursor: pointer;
+  transition: color 0.2s ease-out, opacity 0.2s ease-out;
+  opacity: 0.8;
+}
+
+.playerControls:hover {
+  color: #46954a;
+}
+
+.playerControls:active {
+  opacity: 1;
+}
+
+#progressBar {
+  --c: #46954a; /* active color */
+  --g: 0px; /* the gap */
+  --l: 3px; /* line thickness*/
+  --s: 13px; /* thumb size*/
+  
+  width: 100%;
+  height: var(--s); /* needed for Firefox*/
+  -webkit-appearance :none;
+  -moz-appearance :none;
+  appearance :none;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.8;
+  transition: opacity .2s;
+}
+#progressBar:hover {
+  opacity: 1;
+}
+
+/* chromium */
+#progressBar::-webkit-slider-thumb{
+  height: var(--s);
+  width: var(--s);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background-color: var(--c);
+  border-image: linear-gradient(90deg,var(--c) 50%,rgb(120, 120, 120) 0) 0 1/calc(50% - var(--l)/2) 100vw/0 calc(100vw + var(--g)); 
+  -webkit-appearance: none;
+  appearance: none;
+}
+/* Firefox */
+#progressBar::-moz-range-thumb {
+  height: var(--s);
+  width: var(--s);
+  background: none;
+  border-radius: 50%;
+  background-color: var(--c);
+  border-image: linear-gradient(90deg,var(--c) 50%,rgb(120, 120, 120) 0) 0 1/calc(50% - var(--l)/2) 100vw/0 calc(100vw + var(--g)); 
+  -moz-appearance: none;
+  appearance: none;
+}
