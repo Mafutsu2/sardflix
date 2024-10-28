@@ -65,7 +65,6 @@ let userDatasets = [];
 let allData = [];
 let champInfo = [];
 let maxLength = 1;
-let maxLengthIndex = 0;
 let openedStats = '';
 
 let summoners_graph = []
@@ -141,10 +140,8 @@ const start = async() => {
     allData = formatData1();
     userDatasets = formatData2(allData);
     userDatasets.forEach((u, i) => {
-      if(u.data.length > maxLength) {
+      if(u.data.length > maxLength)
         maxLength = u.data.length;
-        maxLengthIndex = i;
-      }
     });
     initChart();
     allData.sort((a, b) => b.timestamp - a.timestamp);
@@ -627,7 +624,6 @@ const formatData2 = (allData) => {
 
 let stackedLine;
 const initChart = () => {
-
   let tierDatasets = [];
   ladder.forEach(o => {
     if(o.division === "I" || isApexTier(o.tier)) {
@@ -636,7 +632,7 @@ const initChart = () => {
           label: o.tier,
           data: [
             {x: 0, y: o.max},
-            {x: maxLength - 1, y: o.max},
+            {x: maxLength, y: o.max},
           ],
           fill: o.tier === "Iron" ? 'start' : '-1',
           borderColor: 'rgba(0, 0, 0, 0)',
@@ -761,7 +757,7 @@ const initChart = () => {
             type: 'linear',
             beginAtZero: true,
             min: 0,
-            max: maxLength,
+            max: maxX+1,
             ticks: {
               offset: true,
               stepSize: 1,
@@ -769,8 +765,6 @@ const initChart = () => {
               includeBounds: false,
               callback: function(value, index, ticks) {
                 if(value % 5 === 0 || value === maxLength - 1) {
-                  //let d = userDatasets[maxLengthIndex].data.find(o => value === o.x);
-                  //return d ? d.x : '';
                   return value;
                 }
               },
