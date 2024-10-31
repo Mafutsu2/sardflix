@@ -74,7 +74,7 @@ let uniqueCounter = 0;
 
 tiers.forEach(t => {
   if(isApexTier(t.name)) {
-    ladder.push({min: counter, max: counter + 600, tier: t.name, division: '', color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
+    ladder.push({min: counter, max: counter + 600, tier: t.name, division: 'I', color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
     counter += 600;
   } else {
     divisions.forEach(d => {
