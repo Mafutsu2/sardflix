@@ -35,7 +35,7 @@ const curvesColors = [
   {name: 'purple', colorLight: '#7757eb', colorDark: '#4d3d8f', colorHover: '#b4a2f5'},
   {name: 'teal', colorLight: '#57ebd2', colorDark: '#4d877d', colorHover: '#b0f5e9'},
   {name: 'pink', colorLight: '#eb57df', colorDark: '#804b7b', colorHover: '#f5a9ef'},
-  {name: 'green', colorLight: '#68e35b', colorDark: '#4b8545', colorHover: '#b0f5a9'},
+  {name: 'orange', colorLight: '#ff9900', colorDark: '#bd842f', colorHover: '#ffd494'},
   {name: 'red', colorLight: '#e85f5f', colorDark: '#964a4a', colorHover: '#f79e9e'},
   {name: 'blue', colorLight: '#579feb', colorDark: '#506d8c', colorHover: '#a6cdf7'},
   {name: 'orange', colorLight: '#f0a85b', colorDark: '#917454', colorHover: '#f5d8ba'},
@@ -67,7 +67,7 @@ let champInfo = [];
 let maxLength = 1;
 let openedStats = '';
 
-let summoners_graph = []
+let summoners_graph = [];
 let ladder = [];
 let counter = 0;
 let uniqueCounter = 0;
@@ -114,7 +114,7 @@ const openOPGG = (url) => {
   return false;
 };
 
-let minY = ladder[ladder.length - 1].max, maxY = 0;
+let minY = 0, maxY = ladder[ladder.length - 1].max, maxX = 0;
 const getMatches = async() => {
   const response = await fetch('https://api.sardflix.com/matches');
   if(response.status !== 200) {
@@ -293,8 +293,17 @@ const initCards = (allData, champInfo, versions) => {
       currentSession = d.session;
       let session = sessions.find(s => s.id === d.session);
       let newSessionEl = document.createElement('div');
+      let hiddenCount = 0;
+
+      session.summoners.forEach(summoner => {
+        hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
+      });
+      let display = '!block';
+      if(hiddenCount === session.summoners.length)
+        display = '!hidden';
+      
       newSessionEl.innerHTML += `
-        <div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold">
+        <div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold ${display}">
           <div class="inline-flex items-center">
             <span>SESSION: ${session.wins}</span>
             <span class="my-0 mx-[1px] text-[16px] font-normal opacity-40">/</span>
@@ -305,6 +314,7 @@ const initCards = (allData, champInfo, versions) => {
         </div>
       `;
       gameCards.append(newSessionEl);
+      session.element = newSessionEl;
     }
     
     let escapedName = encodeURIComponent(d.name.replace('#', '-'));
@@ -408,6 +418,8 @@ const findSummonerNextGame = (game, index) => {
 };
 
 const formatData1 = () => {
+  let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+  curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
   let fakeSecond = 2000;//Seconds to remove from games so that lp change dont happen before game finish. Otherwise it falsly marks the game as a dodge.
   let allData = [];
   let summoners = {};
@@ -481,21 +493,14 @@ const formatData1 = () => {
 
     let summoner_graph = summoners_graph.find(p => p.name === g.name);
     if (!summoner_graph){
-      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden:false})
-      summoner_graph = summoners_graph[index_new_sum -1]
+      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden: curvesHiddenVisibility[g.name] ? true : false})
+      summoner_graph = summoners_graph[index_new_sum -1];
     }
-    else{
-      summoner_graph.nbGame+=1
-    }
+    summoner_graph.nbGame+=1
     if(y < summoner_graph.minY)
       summoner_graph.minY = y;
     if(y > summoner_graph.maxY)
       summoner_graph.maxY = y;
-    
-    if(y < minY)
-      minY = y;
-    if(y > maxY)
-      maxY = y;
     
     if(g.is_victory <= 1) {
       let cInfo = champInfo.find(c => c.id === g.champion_id);
@@ -544,13 +549,20 @@ const formatData1 = () => {
         games: 0,
         wins: 0,
         loses: 0,
+        summoners: [],
       });
       session = sessions[sIndex - 1];
     }
     session.games += d.outcome < 2 ? 1 : 0;
     session.wins += d.outcome === 1 ? 1 : 0;
     session.loses += d.outcome === 0 ? 1 : 0;
+    !session.summoners.includes(d.name) ? session.summoners.push(d.name) : null;
   });
+  const visibleData = summoners_graph.filter(item => !item.hidden);
+
+  minY = Math.min(...visibleData.map(item => item.minY));
+  maxY = Math.max(...visibleData.map(item => item.maxY));
+  maxX = Math.max(...visibleData.map(item => item.nbGame));
   return allData;
 };
 
@@ -868,26 +880,6 @@ const initChart = () => {
               pointStyle: 'rectRounded'
             },
             onClick: (event, legendItem, legend) => {
-              Chart.defaults.plugins.legend.onClick(event, legendItem, legend);
-              
-              allData.forEach(d => {
-                if(d.name === legendItem.text) {
-                  if(legendItem.hidden){
-                    d.element.classList.remove('!flex');
-                    d.element.classList.add('!hidden');
-                  } else {
-                    d.element.classList.remove('!hidden');
-                    d.element.classList.add('!flex');
-                  }
-                }
-              });
-              
-              let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
-              let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
-              localStorage.setItem("curves-hidden-visibility", JSON.stringify(newCurvesHiddenVisibility));
-            }
-            ,onClick: (e, legendItem, legend) => {
-
               let summoner_graph = summoners_graph.find(p => p.name === legendItem.text);
               const index = legendItem.datasetIndex;
               const ci = legend.chart;
@@ -901,18 +893,49 @@ const initChart = () => {
                 ci.show(index);
                 legendItem.hidden = false;
                 summoner_graph.hidden = false;
-             }
+              }
+              
+              const visibleData = summoners_graph.filter(item => !item.hidden);
 
-            const visibleData = summoners_graph.filter(item => !item.hidden);
+              const new_minY = Math.min(...visibleData.map(item => item.minY));
+              const new_maxY = Math.max(...visibleData.map(item => item.maxY));
+              const new_maxX = Math.max(...visibleData.map(item => item.nbGame));
 
-            const new_minY = Math.min(...visibleData.map(item => item.minY));
-            const new_maxY = Math.max(...visibleData.map(item => item.maxY));
-            const new_maxX = Math.max(...visibleData.map(item => item.nbGame));
+              stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100;
+              stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100;
+              stackedLine.options.scales.x.max = new_maxX +1;
+              stackedLine.update();
 
-            stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100
-            stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100
-            stackedLine.options.scales.x.max = new_maxX
-            stackedLine.update();
+              allData.forEach(d => {
+                if(d.name === legendItem.text) {
+                  if(legendItem.hidden){
+                    d.element.classList.remove('!flex');
+                    d.element.classList.add('!hidden');
+                  } else {
+                    d.element.classList.remove('!hidden');
+                    d.element.classList.add('!flex');
+                  }
+                }
+              });
+
+              sessions.forEach(s => {
+                let hiddenCount = 0;
+                s.summoners.forEach(summoner => {
+                  hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
+                });
+
+                if(hiddenCount === s.summoners.length){
+                  s.element.classList.remove('!block');
+                  s.element.classList.add('!hidden');
+                } else {
+                  s.element.classList.remove('!hidden');
+                  s.element.classList.add('!block');
+                }
+              });
+              
+              let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+              let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
+              localStorage.setItem("curves-hidden-visibility", JSON.stringify(newCurvesHiddenVisibility));
             }
           },
           tooltip: {
