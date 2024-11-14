@@ -63,7 +63,23 @@ let lps = [];
 let sessions = [];
 let userDatasets = [];
 let allData = [];
-let champInfo = [];
+let champInfo = [{
+  id: -1,
+  name: 'All Champions',
+  games: 0,
+  wins: 0,
+  loses: 0,
+  ff: 0,
+  kills: 0,
+  deaths: 0,
+  assists: 0,
+  totalCs: 0,
+  totalDamage: 0,
+  totalGold: 0,
+  duration: 0,
+  vision: 0,
+  totalLp: 0,
+}];
 let maxLength = 1;
 let openedStats = '';
 
@@ -366,14 +382,15 @@ const initCards = (allData, champInfo, versions) => {
   });
   
   champInfo.sort((a, b) => b.games - a.games);
-  champInfo.forEach(c => {
+  champInfo.forEach((c, i) => {
     let champInfoDiv = document.createElement('div');
     champInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
+    let champIconUrl = i === 0 ? 'assets/champion.svg' : `https://ddragon.leagueoflegends.com/cdn/${versions[0]}/img/champion/${c.name}.png`;
     let champTxt = `
       <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
-        <img class="w-[30px] h-[30px] max-w-none" src="https://ddragon.leagueoflegends.com/cdn/${versions[0]}/img/champion/${c.name}.png" alt="${c.name}" />
+        <img class="w-[30px] h-[30px] max-w-none" src="${champIconUrl}" alt="${c.name}" />
       </div>
-      <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">${c.games}</div>
+      <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${c.games}</div>
     `;
     champInfoDiv.innerHTML = champTxt;
     champInfoDiv.addEventListener('click', (e) => {
@@ -502,6 +519,7 @@ const formatData1 = () => {
     if(y > summoner_graph.maxY)
       summoner_graph.maxY = y;
     
+    //champions stats
     if(g.is_victory <= 1) {
       let cInfo = champInfo.find(c => c.id === g.champion_id);
       if(!cInfo) {
@@ -524,7 +542,7 @@ const formatData1 = () => {
         });
         cInfo = champInfo[cIndex - 1];
       }
-      cInfo.games += 1;
+      /*cInfo.games += 1;
       cInfo.wins += g.is_victory === 1 ? 1 : 0;
       cInfo.loses += g.is_victory === 0 ? 1 : 0;
       cInfo.ff += g.is_ff && g.is_victory === 0 ? 1 : 0;
@@ -536,11 +554,14 @@ const formatData1 = () => {
       cInfo.totalGold += g.golds;
       cInfo.duration += g.duration;
       cInfo.vision += g.vision;
-      cInfo.totalLp += lpDiffGame != null ? lpDiffGame : 0;
+      cInfo.totalLp += lpDiffGame != null ? lpDiffGame : 0;*/
+      addDataToCInfo(champInfo[0], g, lpDiffGame);
+      addDataToCInfo(cInfo, g, lpDiffGame);
     }
     sessionCounter += (matches[i + 1] && matches[i + 1].end_timestamp > g.end_timestamp + 14400000) ? 1 : 0;//4 hours
   });
   
+  //sessions stats
   allData.forEach(d => {
     let session = sessions.find(s => s.id === d.session);
     if(!session) {
@@ -564,6 +585,22 @@ const formatData1 = () => {
   maxY = Math.max(...visibleData.map(item => item.maxY));
   maxX = Math.max(...visibleData.map(item => item.nbGame));
   return allData;
+};
+
+const addDataToCInfo = (cInfo, g, lpDiffGame) => {
+  cInfo.games += 1;
+  cInfo.wins += g.is_victory === 1 ? 1 : 0;
+  cInfo.loses += g.is_victory === 0 ? 1 : 0;
+  cInfo.ff += g.is_ff && g.is_victory === 0 ? 1 : 0;
+  cInfo.kills += g.kills;
+  cInfo.deaths += g.deaths;
+  cInfo.assists += g.assists;
+  cInfo.totalCs += g.cs;
+  cInfo.totalDamage += g.damage;
+  cInfo.totalGold += g.golds;
+  cInfo.duration += g.duration;
+  cInfo.vision += g.vision;
+  cInfo.totalLp += lpDiffGame != null ? lpDiffGame : 0;
 };
 
 const formatData2 = (allData) => {
