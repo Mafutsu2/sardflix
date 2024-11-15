@@ -435,8 +435,6 @@ const findSummonerNextGame = (game, index) => {
 };
 
 const formatData1 = () => {
-  let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
-  curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
   let fakeSecond = 2000;//Seconds to remove from games so that lp change dont happen before game finish. Otherwise it falsly marks the game as a dodge.
   let allData = [];
   let summoners = {};
@@ -507,17 +505,6 @@ const formatData1 = () => {
         summoners[g.name] = y;
       }
     });
-
-    let summoner_graph = summoners_graph.find(p => p.name === g.name);
-    if (!summoner_graph){
-      let index_new_sum = summoners_graph.push({name: g.name, minY:999999,maxY:0, nbGame:0, hidden: curvesHiddenVisibility[g.name] ? true : false})
-      summoner_graph = summoners_graph[index_new_sum -1];
-    }
-    summoner_graph.nbGame+=1
-    if(y < summoner_graph.minY)
-      summoner_graph.minY = y;
-    if(y > summoner_graph.maxY)
-      summoner_graph.maxY = y;
     
     //champions stats
     if(g.is_victory <= 1) {
@@ -579,11 +566,6 @@ const formatData1 = () => {
     session.loses += d.outcome === 0 ? 1 : 0;
     !session.summoners.includes(d.name) ? session.summoners.push(d.name) : null;
   });
-  const visibleData = summoners_graph.filter(item => !item.hidden);
-
-  minY = Math.min(...visibleData.map(item => item.minY));
-  maxY = Math.max(...visibleData.map(item => item.maxY));
-  maxX = Math.max(...visibleData.map(item => item.nbGame));
   return allData;
 };
 
@@ -624,7 +606,16 @@ const formatData2 = (allData) => {
     s1.order = count;
   });
   
+  let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+  curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
+  
   summoners.forEach((s, sIndex) => {
+    let summoner_graph = summoners_graph.find(p => p.name === s.name);
+    if (!summoner_graph){
+      let index_new_sum = summoners_graph.push({name: s.name, minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.name] ? true : false})
+      summoner_graph = summoners_graph[index_new_sum - 1];
+    }
+    
     let playerData = [];
     let counter = 1;
     allData.forEach((g, i) => {
@@ -638,6 +629,13 @@ const formatData2 = (allData) => {
             match_id: getUniqueCounter(),
           });
         }
+        
+        summoner_graph.nbGame = counter;
+        if(g.y < summoner_graph.minY)
+          summoner_graph.minY = g.y;
+        if(g.y > summoner_graph.maxY)
+          summoner_graph.maxY = g.y;
+        
         playerData.push({
           x: counter,
           color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
@@ -648,7 +646,6 @@ const formatData2 = (allData) => {
       }
     });
     
-    let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
     newUserDatasets.push({
       label: s.name,
       data: playerData,
@@ -665,9 +662,15 @@ const formatData2 = (allData) => {
         borderDash: ctx => playerData[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
       },
       order: s.order,
-      hidden: curvesHiddenVisibility && JSON.parse(curvesHiddenVisibility)[s.name] ? true : false,
+      hidden: curvesHiddenVisibility[s.name] ? true : false,
     });
   });
+  
+  const visibleData = summoners_graph.filter(item => !item.hidden);
+
+  minY = Math.min(...visibleData.map(item => item.minY));
+  maxY = Math.max(...visibleData.map(item => item.maxY));
+  maxX = Math.max(...visibleData.map(item => item.nbGame));
   return newUserDatasets;
 };
 
