@@ -715,6 +715,7 @@ const initChart = () => {
           },
           pointRadius: 0,
           showTooltips: false,
+          order: 100,
         }
       );
     }
