@@ -832,7 +832,20 @@ const initChart = () => {
             },
           }
         },
+        onClick: function(event, elements) {
+          if (elements.length && elements[0].element.raw) {
+            let raw = elements[0].element.raw;
+            allData.forEach(currentGame => {
+              if(currentGame.match_id === raw.match_id) {
+                currentGame.element.scrollIntoView({behavior: "smooth", block: "center"});
+              }
+            });
+          }
+        },
         onHover: function(event, elements) {
+          const canvas = event.native.target;
+          canvas.style.cursor = elements.length ? 'pointer' : 'default';
+          
           if (elements.length && elements[0].element.raw) {
             var index = elements[0].index;
             var datasetIndex = elements[0].datasetIndex;
@@ -842,7 +855,6 @@ const initChart = () => {
             allData.forEach(currentGame => {
               if(currentGame.match_id === raw.match_id) {
                 if(!isScrolling) {
-                  currentGame.element.scrollIntoView({behavior: "smooth", block: "center"});
                   switch(currentGame.outcome) {
                     case 1:
                       currentGame.element.classList.remove('win');
