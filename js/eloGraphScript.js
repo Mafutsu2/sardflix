@@ -147,6 +147,13 @@ const getLps = async() => {
     document.getElementById('container').innerHTML = 'Error';
   } else {
     lps = await response.json();
+    //To avoid a bug where it adds twice the LP to the database in under a second (remove it so id doesn't end up looking like a -0LP dodge)
+    let newLps = [];
+    lps.forEach((lp, i) => {
+      if(!(lps[i - 1] && lp.summoner_id === lps[i - 1].summoner_id && lp.timestamp - lps[i - 1].timestamp < 1000))
+        newLps.push(lp);
+    });
+    lps = newLps;
     start();
   }
 };
