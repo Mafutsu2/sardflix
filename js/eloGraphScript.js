@@ -122,7 +122,7 @@ window.onload = () => {
     champInfoDiv.scrollBy({
       left: event.deltaY < 0 ? -30 : 30,
     });
-  });
+  }, {passive: false});
 };
 
 const openOPGG = (url) => {
@@ -361,7 +361,31 @@ const initCards = (allData, champInfo, versions) => {
         </div>
       </div>
     `;
-    newEl.addEventListener('mouseover', event => {
+    newEl.addEventListener('mouseenter', event => {
+      newEl.classList.add(hoverClassName);
+      userDatasets.forEach(dataset => {
+        dataset.segment.borderColor = (ctx) => {
+          if(ctx.p1.raw.match_id === d.match_id)
+            return ctx.p1.raw.colorHover;
+          else
+            return ctx.p1.raw.color;
+        };
+        dataset.pointBackgroundColor = dataset.data.map(data => {
+          if(data.match_id === d.match_id)
+            return data.colorHover;
+          else
+            return data.color;
+        });
+        //make curve appear in front when hovered
+        if(dataset.label === d.name)
+          dataset.order = -1;
+        else if(dataset.order !== dataset.defaultOrder)
+          dataset.order = dataset.defaultOrder;
+      });
+      stackedLine.update();
+    });
+    newEl.addEventListener('mouseleave', event => {
+      newEl.classList.remove(hoverClassName);
       userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => {
           if(ctx.p1.raw.match_id === d.match_id)
@@ -378,13 +402,13 @@ const initCards = (allData, champInfo, versions) => {
       });
       stackedLine.update();
     });
-    newEl.addEventListener('mouseenter', event => {
-      newEl.classList.add(hoverClassName);
-    });
-    newEl.addEventListener('mouseleave', event => {
-      newEl.classList.remove(hoverClassName);
-    });
     gameCards.append(newEl);
+    gameCards.addEventListener('mouseleave', event => {
+      userDatasets.forEach(dataset => {
+        if(dataset.order !== dataset.defaultOrder)
+          dataset.order = dataset.defaultOrder;
+      });
+    });
     d.element = newEl;
   });
   
@@ -670,6 +694,9 @@ const formatData2 = (allData) => {
       },
       order: s.order,
       hidden: curvesHiddenVisibility[s.name] ? true : false,
+      
+      //custom prop
+      defaultOrder: s.order,
     });
   });
   
@@ -936,6 +963,7 @@ const initChart = () => {
                 return labels;
               },
               filter: (item, chartData) => !tiers.some(t => t.name === item.text),
+              sort: (a, b, chartData) =>  chartData.datasets.find(d => d.label === a.text).defaultOrder - chartData.datasets.find(d => d.label === b.text).defaultOrder,
               usePointStyle: true,
               pointStyle: 'rectRounded'
             },
