@@ -377,10 +377,13 @@ const initCards = (allData, champInfo, versions) => {
             return data.color;
         });
         //make curve appear in front when hovered
-        if(dataset.label === d.name)
+        if(dataset.label === d.name) {
           dataset.order = -1;
-        else if(dataset.order !== dataset.defaultOrder)
+          dataset.type = 'shadowLine';
+        } else if(dataset.order !== dataset.defaultOrder) {
           dataset.order = dataset.defaultOrder;
+          dataset.type = 'line';
+        }
       });
       stackedLine.update();
     });
@@ -405,8 +408,10 @@ const initCards = (allData, champInfo, versions) => {
     gameCards.append(newEl);
     gameCards.addEventListener('mouseleave', event => {
       userDatasets.forEach(dataset => {
-        if(dataset.order !== dataset.defaultOrder)
+        if(dataset.order !== dataset.defaultOrder) {
           dataset.order = dataset.defaultOrder;
+          dataset.type = 'line';
+        }
       });
     });
     d.element = newEl;
@@ -678,6 +683,7 @@ const formatData2 = (allData) => {
     });
     
     newUserDatasets.push({
+      type: 'line',
       label: s.name,
       data: playerData,
       fill: false,
@@ -697,6 +703,7 @@ const formatData2 = (allData) => {
       
       //custom prop
       defaultOrder: s.order,
+      defaultColor: curvesColors[sIndex].colorLight,
     });
   });
   
@@ -707,6 +714,25 @@ const formatData2 = (allData) => {
   maxX = Math.max(...visibleData.map(item => item.nbGame));
   return newUserDatasets;
 };
+
+class ShadowLine extends Chart.LineController {
+  draw() {
+    const ctx = this.chart.ctx;
+    const _stroke = ctx.stroke;
+    const meta = this.getMeta();
+    const color = meta._dataset.defaultColor;
+    ctx.stroke = function() {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      _stroke.apply(this, arguments);
+    };
+    super.draw(arguments);
+    ctx.stroke = _stroke;
+  }
+};
+ShadowLine.id = 'shadowLine';
+ShadowLine.defaults = Chart.LineController.defaults;
+Chart.register(ShadowLine);
 
 let stackedLine;
 const initChart = () => {
