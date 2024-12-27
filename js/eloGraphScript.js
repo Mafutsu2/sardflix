@@ -562,19 +562,6 @@ const formatData1 = () => {
         });
         cInfo = champInfo[cIndex - 1];
       }
-      /*cInfo.games += 1;
-      cInfo.wins += g.is_victory === 1 ? 1 : 0;
-      cInfo.loses += g.is_victory === 0 ? 1 : 0;
-      cInfo.ff += g.is_ff && g.is_victory === 0 ? 1 : 0;
-      cInfo.kills += g.kills;
-      cInfo.deaths += g.deaths;
-      cInfo.assists += g.assists;
-      cInfo.totalCs += g.cs;
-      cInfo.totalDamage += g.damage;
-      cInfo.totalGold += g.golds;
-      cInfo.duration += g.duration;
-      cInfo.vision += g.vision;
-      cInfo.totalLp += lpDiffGame != null ? lpDiffGame : 0;*/
       addDataToCInfo(champInfo[0], g, lpDiffGame);
       addDataToCInfo(cInfo, g, lpDiffGame);
     }
