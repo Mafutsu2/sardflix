@@ -403,15 +403,17 @@ const initCards = (allData, champInfo, versions) => {
       stackedLine.update();
     });
     gameCards.append(newEl);
-    gameCards.addEventListener('mouseleave', event => {
-      userDatasets.forEach(dataset => {
-        if(dataset.order !== dataset.defaultOrder) {
-          dataset.order = dataset.defaultOrder;
-          dataset.type = 'line';
-        }
-      });
-    });
     d.element = newEl;
+  });
+  
+  gameCards.addEventListener('mouseleave', event => {
+    userDatasets.forEach(dataset => {
+      if(dataset.order !== dataset.defaultOrder) {
+        dataset.order = dataset.defaultOrder;
+        dataset.type = 'line';
+      }
+    });
+    stackedLine.update();
   });
   
   champInfo.sort((a, b) => b.games - a.games);
