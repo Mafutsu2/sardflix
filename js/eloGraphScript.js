@@ -83,7 +83,7 @@ let champInfo = [{
 let maxLength = 1;
 let openedStats = '';
 
-let summoners_graph = [];
+let summonersInfo = {};
 let ladder = [];
 let counter = 0;
 let uniqueCounter = 0;
@@ -235,9 +235,6 @@ const initCurrentGameCards = async(versions) => {
 };
 
 const initCards = (allData, champInfo, versions) => {
-  let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
-  curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
-  
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
   allData.forEach(d => {
@@ -268,7 +265,7 @@ const initCards = (allData, champInfo, versions) => {
       hoverClassName = 'remakeHover';
       lpDiff = `(${d.lpDiff})`;
     }
-    if(curvesHiddenVisibility && curvesHiddenVisibility[d.name]){
+    if(summonersInfo[d.name] && summonersInfo[d.name].hidden){
       newEl.classList.add('!hidden');
     } else {
       newEl.classList.add('!flex');
@@ -319,7 +316,7 @@ const initCards = (allData, champInfo, versions) => {
       let hiddenCount = 0;
 
       session.summoners.forEach(summoner => {
-        hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
+        hiddenCount += summonersInfo[summoner] && summonersInfo[summoner].hidden ? 1 : 0;
       });
       let display = '!block';
       if(hiddenCount === session.summoners.length)
@@ -646,10 +643,10 @@ const formatData2 = (allData) => {
   curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
   
   summoners.forEach((s, sIndex) => {
-    let summoner_graph = summoners_graph.find(p => p.name === s.name);
-    if (!summoner_graph){
-      let index_new_sum = summoners_graph.push({name: s.name, minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.name] ? true : false})
-      summoner_graph = summoners_graph[index_new_sum - 1];
+    let summoner_graph = summonersInfo[s.name];
+    if(!summoner_graph) {
+      summonersInfo[s.name] = {minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.name] ? true : false};
+      summoner_graph = summonersInfo[s.name];
     }
     
     let playerData = [];
@@ -699,7 +696,7 @@ const formatData2 = (allData) => {
         borderDash: ctx => playerData[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
       },
       order: s.order,
-      hidden: curvesHiddenVisibility[s.name] ? true : false,
+      hidden: summonersInfo[s.name].hidden ? true : false,
       
       //custom prop
       defaultOrder: s.order,
@@ -707,13 +704,15 @@ const formatData2 = (allData) => {
     });
   });
   
-  const visibleData = summoners_graph.filter(item => !item.hidden);
+  const visibleData = filterHidden(summonersInfo);
 
-  minY = Math.min(...visibleData.map(item => item.minY));
-  maxY = Math.max(...visibleData.map(item => item.maxY));
-  maxX = Math.max(...visibleData.map(item => item.nbGame));
+  minY = Math.min(...visibleData.map(item => item[1].minY));
+  maxY = Math.max(...visibleData.map(item => item[1].maxY));
+  maxX = Math.max(...visibleData.map(item => item[1].nbGame));
   return newUserDatasets;
 };
+
+const filterHidden = (obj) => Object.entries(obj).filter(([key, value]) => !value.hidden);
 
 class ShadowLine extends Chart.LineController {
   draw() {
@@ -1000,26 +999,30 @@ const initChart = () => {
               event.native.target.style.cursor = 'default';
             },
             onClick: (event, legendItem, legend) => {
-              let summoner_graph = summoners_graph.find(p => p.name === legendItem.text);
+              let summoner_graph = summonersInfo[legendItem.text];
               const index = legendItem.datasetIndex;
               const ci = legend.chart;
               
               // Base on click action, need because overdrive
               if (ci.isDatasetVisible(index)) {
-                summoner_graph.hidden = true;
-                ci.hide(index);
                 legendItem.hidden = true;
+                summoner_graph.hidden = true;
               } else {
-                ci.show(index);
                 legendItem.hidden = false;
                 summoner_graph.hidden = false;
               }
               
-              const visibleData = summoners_graph.filter(item => !item.hidden);
+              userDatasets.forEach(dataset => {
+                if(dataset.label === legendItem.text) {
+                  dataset.hidden = ci.isDatasetVisible(index);
+                }
+              });
+              
+              const visibleData = filterHidden(summonersInfo);
 
-              const new_minY = Math.min(...visibleData.map(item => item.minY));
-              const new_maxY = Math.max(...visibleData.map(item => item.maxY));
-              const new_maxX = Math.max(...visibleData.map(item => item.nbGame));
+              const new_minY = Math.min(...visibleData.map(item => item[1].minY));
+              const new_maxY = Math.max(...visibleData.map(item => item[1].maxY));
+              const new_maxX = Math.max(...visibleData.map(item => item[1].nbGame));
 
               stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100;
               stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100;
@@ -1041,7 +1044,7 @@ const initChart = () => {
               sessions.forEach(s => {
                 let hiddenCount = 0;
                 s.summoners.forEach(summoner => {
-                  hiddenCount += summoners_graph.some(sg => sg.name === summoner && sg.hidden) ? 1 : 0;
+                  hiddenCount += summonersInfo[summoner] && summonersInfo[summoner].hidden ? 1 : 0;
                 });
 
                 if(hiddenCount === s.summoners.length){
