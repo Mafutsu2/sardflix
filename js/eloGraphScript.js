@@ -993,6 +993,12 @@ const initChart = () => {
               usePointStyle: true,
               pointStyle: 'rectRounded'
             },
+            onHover: (event, legendItem, legend) => {
+              event.native.target.style.cursor = 'pointer';
+            },
+            onLeave: (event, legendItem, legend) => {
+              event.native.target.style.cursor = 'default';
+            },
             onClick: (event, legendItem, legend) => {
               let summoner_graph = summoners_graph.find(p => p.name === legendItem.text);
               const index = legendItem.datasetIndex;
