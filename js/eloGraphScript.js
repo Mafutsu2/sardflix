@@ -57,6 +57,7 @@ const tiers = [
 ];
 const isApexTier = (name) => ["Master", "Grandmaster", "Challenger"].includes(name);
 const divisions = ["IV", "III", "II", "I"];
+let currentVersion = '';
 let isScrolling = false;
 let matches = [];
 let lps = [];
@@ -170,6 +171,7 @@ const start = async() => {
     allData.sort((a, b) => b.timestamp - a.timestamp);
     let response = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
     let versions = await response.json();
+    currentVersion = versions[0];
     initCards(allData, champInfo, versions);
     initCurrentGameCards(versions);
   }
@@ -1051,7 +1053,87 @@ const initChart = () => {
             }
           },
           tooltip: {
-            enabled: false
+            enabled: false,
+            external: (context) => {
+              let tooltipEl = document.getElementById('chartjs-tooltip');
+
+              if (!tooltipEl) {
+                tooltipEl = document.createElement('div');
+                tooltipEl.id = 'chartjs-tooltip';
+                document.body.appendChild(tooltipEl);
+              }
+
+              // Hide if no tooltip
+              const tooltipModel = context.tooltip;
+              if (tooltipModel.opacity === 0) {
+                tooltipEl.style.opacity = 0;
+                return;
+              }
+
+              // Set Text
+              if (tooltipModel.body) {
+                const tooltipName = tooltipModel.dataPoints[0].raw.name;
+                const date = new Date(tooltipModel.dataPoints[0].raw.timestamp);
+                const tooltipOutcome = tooltipModel.dataPoints[0].raw.outcome;
+                const tooltipChampion = tooltipModel.dataPoints[0].raw.champion;
+                const tooltipLane = tooltipModel.dataPoints[0].raw.position;
+                const tooltipTier = tooltipModel.dataPoints[0].raw.tier;
+                const tooltipDivision = tooltipModel.dataPoints[0].raw.division;
+                const tooltipLp = tooltipModel.dataPoints[0].raw.lp;
+                const tooltipPlacement = tooltipModel.dataPoints[0].raw.placement;
+                let bgColor = 'bg-[#323232cc]';
+                let borderColor = 'border-[#5c5c5c]';
+                if(tooltipOutcome === 1) {
+                  bgColor = 'bg-[#30324bcc]';
+                  borderColor = 'border-[#5260e3]';
+                } else if(tooltipOutcome === 0) {
+                  bgColor = 'bg-[#4c3232cc]';
+                  borderColor = 'border-[#e85f5f]';
+                }
+                
+                let displayedLp = `
+                  <img class="align-middle inline max-w-none mr-[4px]" src="assets/${tooltipTier.toLowerCase()}.svg"/>
+                  <div><span class="${textColorsForRetardedTailwind[tooltipTier.toLowerCase()]}">${tooltipDivision}</span> ${tooltipLp} LP</div>
+                `;
+                if(tooltipPlacement !== -1) {
+                  displayedLp = `
+                    <img class="align-middle inline max-w-none mr-[4px]" src="assets/unranked.svg"/>
+                    <div>p ${tooltipOutcome === 2 ? '-' : tooltipPlacement}/5</div>
+                  `;
+                }
+                
+                let displayChampion = `<div>Dodge</div>`;
+                if(tooltipOutcome !== 3) {
+                  displayChampion = `
+                    <img class="w-[17px] h-[17px] mr-[2px] rounded-[4px] max-w-none" src="assets/icon-position-${tooltipLane.toLowerCase()}.png" />
+                    <div class="flex justify-center items-center w-[20px] h-[20px] overflow-hidden rounded-[4px]">
+                      <img class="w-[25px] h-[25px] max-w-none" src="https://ddragon.leagueoflegends.com/cdn/${currentVersion}/img/champion/${tooltipChampion}.png" alt="${tooltipChampion}" />
+                    </div>
+                  `;
+                }
+                
+                tooltipEl.innerHTML = `
+                  <div class="p-[6px] ${bgColor} border-[1px] ${borderColor} rounded-[4px] translate-x-[-50%] translate-y-[-100%] flex flex-col text-[13px]">
+                    <div class="pb-[2px]">${tooltipName}</div>
+                    <div class="pb-[4px] text-[11px] text-[#999999]">${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}</div>
+                    <div class="flex items-center">
+                      ${displayedLp}
+                      <div class="grow"></div>
+                      ${displayChampion}
+                    </div>
+                  </div>
+                `;
+              }
+              
+              const position = context.chart.canvas.getBoundingClientRect();
+              const bodyFont = Chart.helpers.toFont(tooltipModel.options.bodyFont);
+
+              tooltipEl.style.opacity = 1;
+              tooltipEl.style.position = 'absolute';
+              tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+              tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 10 + 'px';
+              tooltipEl.style.pointerEvents = 'none';
+            },
           },
           //zoom: zoomOptions,
         },
