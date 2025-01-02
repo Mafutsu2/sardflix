@@ -265,7 +265,7 @@ const initCards = (allData, champInfo, versions) => {
     } else {
       newEl.className = 'card remake';
       hoverClassName = 'remakeHover';
-      lpDiff = `(${d.lpDiff})`;
+      lpDiff = `(${d.lpDiff < 0 ? d.lpDiff : '+' + d.lpDiff})`;
     }
     if(summonersInfo[d.name] && summonersInfo[d.name].hidden){
       newEl.classList.add('!hidden');
@@ -297,6 +297,8 @@ const initCards = (allData, champInfo, versions) => {
           <img class="w-[50px] h-[50px] max-w-none" src="https://ddragon.leagueoflegends.com/cdn/${versions[0]}/img/champion/${d.champion}.png" alt="${d.champion}" />
         </div>
       `;
+    } else if(d.outcome === 3 && d.lpDiff > 0) {
+      kda = `<img class="align-middle inline w-[50px] h-[50px]" src="assets/lp_consolation.svg"/><div>Cons. LP</div>`;
     }
     if(d.placement === -1) {
       lp = `
@@ -1080,6 +1082,7 @@ const initChart = () => {
                 const tooltipTier = tooltipModel.dataPoints[0].raw.tier;
                 const tooltipDivision = tooltipModel.dataPoints[0].raw.division;
                 const tooltipLp = tooltipModel.dataPoints[0].raw.lp;
+                const tooltipLpDiff = tooltipModel.dataPoints[0].raw.lpDiff;
                 const tooltipPlacement = tooltipModel.dataPoints[0].raw.placement;
                 let bgColor = 'bg-[#323232cc]';
                 let borderColor = 'border-[#5c5c5c]';
@@ -1093,16 +1096,16 @@ const initChart = () => {
                 
                 let displayedLp = `
                   <img class="align-middle inline max-w-none mr-[4px]" src="assets/${tooltipTier.toLowerCase()}.svg"/>
-                  <div><span class="${textColorsForRetardedTailwind[tooltipTier.toLowerCase()]}">${tooltipDivision}</span> ${tooltipLp} LP</div>
+                  <div class="mr-[6px]"><span class="${textColorsForRetardedTailwind[tooltipTier.toLowerCase()]}">${tooltipDivision}</span> ${tooltipLp} LP</div>
                 `;
                 if(tooltipPlacement !== -1) {
                   displayedLp = `
                     <img class="align-middle inline max-w-none mr-[4px]" src="assets/unranked.svg"/>
-                    <div>p ${tooltipOutcome === 2 ? '-' : tooltipPlacement}/5</div>
+                    <div class="mr-[6px]">p ${tooltipOutcome === 2 ? '-' : tooltipPlacement}/5</div>
                   `;
                 }
                 
-                let displayChampion = `<div>Dodge</div>`;
+                let displayChampion = `<div">Dodge</div>`;
                 if(tooltipOutcome !== 3) {
                   displayChampion = `
                     <img class="w-[17px] h-[17px] mr-[2px] rounded-[4px] max-w-none" src="assets/icon-position-${tooltipLane.toLowerCase()}.png" />
@@ -1110,6 +1113,8 @@ const initChart = () => {
                       <img class="w-[25px] h-[25px] max-w-none" src="https://ddragon.leagueoflegends.com/cdn/${currentVersion}/img/champion/${tooltipChampion}.png" alt="${tooltipChampion}" />
                     </div>
                   `;
+                } else if(tooltipLpDiff > 0) {
+                  displayChampion = `<img class="w-[17px] h-[17px] max-w-none" src="assets/lp_consolation.svg" />`;
                 }
                 
                 tooltipEl.innerHTML = `
