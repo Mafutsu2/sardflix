@@ -8,7 +8,7 @@ const colors = {
   platinum: '#25ACD6',
   emerald: '#149C3A',
   diamond: '#8141EB',
-  master: '#9D48E0',//#A4584E
+  master: '#A4584E',//#9D48E0
   grandmaster: '#CD4545',//#756572
   challenger: '#F4C874',//#3FBFDD
   opacityBackground: '26',
@@ -23,7 +23,7 @@ const textColorsForRetardedTailwind = {
   platinum: 'text-[#25ACD6]',
   emerald: 'text-[#149C3A]',
   diamond: 'text-[#8141EB]',
-  master: 'text-[#9D48E0]',//#A4584E
+  master: 'text-[#A4584E]',//#9D48E0
   grandmaster: 'text-[#CD4545]',//#756572
   challenger: 'text-[#F4C874]',//#3FBFDD
 };
