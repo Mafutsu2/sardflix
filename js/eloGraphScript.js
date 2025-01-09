@@ -86,17 +86,17 @@ let openedStats = '';
 
 let summonersInfo = {};
 let ladder = [];
-let counter = 0;
+let ladderCounter = 0;
 let uniqueCounter = 0;
 
 tiers.forEach(t => {
   if(isApexTier(t.name)) {
-    ladder.push({min: counter, max: counter + 600, tier: t.name, division: 'I', color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
-    counter += 600;
+    ladder.push({min: ladderCounter, max: ladderCounter + 600, tier: t.name, division: 'I', color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
+    ladderCounter += 600;
   } else {
     divisions.forEach(d => {
-      ladder.push({min: counter, max: counter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
-      counter += 100;
+      ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
+      ladderCounter += 100;
     });
   }
 });
@@ -106,8 +106,18 @@ const getUniqueCounter = () => {
 };
 
 window.onload = () => {
-  getMatches();
-  getLps();
+  selectSort(null, 'seasons');
+  
+  closeAllAutocomplete();
+  document.addEventListener("click", (e) => {
+    closeAllAutocomplete();
+  });
+  document.getElementById('selectedSort').addEventListener('click', (e) => {
+    e.stopPropagation();
+    onSort();
+  });
+  
+  fetchMatchesAndLps();
   document.addEventListener("scroll", (event) => {
     if(!isScrolling) {
       isScrolling = true;
@@ -126,14 +136,56 @@ window.onload = () => {
   }, {passive: false});
 };
 
+const init = () => {
+  matches = [];
+  lps = [];
+  sessions = [];
+  userDatasets = [];
+  allData = [];
+  champInfo = [{
+    id: -1,
+    name: 'All Champions',
+    games: 0,
+    wins: 0,
+    loses: 0,
+    ff: 0,
+    kills: 0,
+    deaths: 0,
+    assists: 0,
+    totalCs: 0,
+    totalDamage: 0,
+    totalGold: 0,
+    duration: 0,
+    vision: 0,
+    totalLp: 0,
+  }];
+  maxLength = 1;
+  openedStats = '';
+
+  summonersInfo = {};
+  uniqueCounter = 0;
+  document.getElementById('champInfo').innerText = '';
+  document.getElementById('gameCards').innerText = '';
+};
+
+const fetchMatchesAndLps = () => {
+  init();
+  getMatches(currentSort.type);
+  getLps(currentSort.type);
+};
+
+const closeAllAutocomplete = () => {
+  document.getElementById('sortOptions').classList.add("!hidden");
+};
+
 const openOPGG = (url) => {
   window.open(url, "_blank", "noopener,noreferrer");
   return false;
 };
 
 let minY = 0, maxY = ladder[ladder.length - 1].max, maxX = 0;
-const getMatches = async() => {
-  const response = await fetch('https://api.sardflix.com/matches');
+const getMatches = async(season) => {
+  const response = await fetch('https://api.sardflix.com/matches?season=' + season);
   if(response.status !== 200) {
     document.getElementById('container').innerHTML = 'Error';
   } else {
@@ -142,8 +194,8 @@ const getMatches = async() => {
   }
 };
 
-const getLps = async() => {
-  const response = await fetch('https://api.sardflix.com/lps');
+const getLps = async(season) => {
+  const response = await fetch('https://api.sardflix.com/lps?season=' + season);
   if(response.status !== 200) {
     document.getElementById('container').innerHTML = 'Error';
   } else {
@@ -728,6 +780,10 @@ Chart.register(ShadowLine);
 
 let stackedLine;
 const initChart = () => {
+  if(stackedLine) {
+    stackedLine?.destroy();
+  }
+  
   let tierDatasets = [];
   ladder.forEach(o => {
     if(o.division === "I" || isApexTier(o.tier)) {
