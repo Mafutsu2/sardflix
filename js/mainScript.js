@@ -36,8 +36,11 @@ window.onload = async() => {
     "input click".split(" ").forEach((event) => {
       document.getElementById('searchAuthor').addEventListener(event, onSearchAuthorTag);
     });
-    selectSort(sorts[0]);
-    document.getElementById('selectedSort').addEventListener('click', onSort);
+    selectSort();
+    document.getElementById('selectedSort').addEventListener('click', (e) => {
+      e.stopPropagation();
+      onSort();
+    });
     
     document.getElementById('searchButton').addEventListener('click', () => showClips(true));
     document.getElementById('searchBox').addEventListener('keypress', (e) => {
