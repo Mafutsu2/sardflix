@@ -89,18 +89,6 @@ let ladder = [];
 let ladderCounter = 0;
 let uniqueCounter = 0;
 
-tiers.forEach(t => {
-  if(isApexTier(t.name)) {
-    ladder.push({min: ladderCounter, max: ladderCounter + 600, tier: t.name, division: 'I', color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
-    ladderCounter += 600;
-  } else {
-    divisions.forEach(d => {
-      ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
-      ladderCounter += 100;
-    });
-  }
-});
-
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
 };
@@ -116,6 +104,20 @@ window.onload = () => {
     e.stopPropagation();
     onSort();
   });
+  
+  const apexGap = currentSort.type === 's15' ? 250 : 600;
+  tiers.forEach(t => {
+    if(isApexTier(t.name)) {
+      ladder.push({min: ladderCounter, max: ladderCounter + apexGap, tier: t.name, division: 'I', isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
+      ladderCounter += apexGap;
+    } else {
+      divisions.forEach(d => {
+        ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
+        ladderCounter += 100;
+      });
+    }
+  });
+  maxY = ladder[ladder.length - 1].max;
   
   fetchMatchesAndLps();
   document.addEventListener("scroll", (event) => {
@@ -183,7 +185,7 @@ const openOPGG = (url) => {
   return false;
 };
 
-let minY = 0, maxY = ladder[ladder.length - 1].max, maxX = 0;
+let minY = 0, maxY = 0, maxX = 0;
 const getMatches = async(season) => {
   const response = await fetch('https://api.sardflix.com/matches?season=' + season);
   if(response.status !== 200) {
@@ -551,7 +553,8 @@ const formatData1 = () => {
     if(!gameLps) {
       gameLps = {tier: 'IRON', division:'IV', lp: 0, timestamp: 0};
     }
-    let y = ladder.find(l => l.tier.toLowerCase() === gameLps.tier.toLowerCase() && l.division === gameLps.division).min + gameLps.lp;
+    //if is apex tier start from y = Master 0LP, otherwise get real y
+    let y = ladder.find(l => (l.isApexTier && l.tier === 'Master') || (l.tier.toLowerCase() === gameLps.tier.toLowerCase() && l.division === gameLps.division)).min + gameLps.lp;
     let lpDiffGame = summoners[g.name] != null ? y - summoners[g.name] : null;
     allData.push({
       match_id: g.match_id,
@@ -888,7 +891,7 @@ const initChart = () => {
             display: true,
             ticks: {
               offset: false,
-              stepSize: 100,
+              stepSize: 1,
               autoSkip: false,
               includeBounds: false,
               color: (tick) => {
