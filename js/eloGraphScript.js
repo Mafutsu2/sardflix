@@ -83,6 +83,7 @@ let champInfo = [{
 }];
 let maxLength = 1;
 let openedStats = '';
+let yTicks = [];
 
 let summonersInfo = {};
 let ladder = [];
@@ -105,20 +106,6 @@ window.onload = () => {
     onSort();
   });
   
-  const apexGap = currentSort.type === 's15' ? 250 : 600;
-  tiers.forEach(t => {
-    if(isApexTier(t.name)) {
-      ladder.push({min: ladderCounter, max: ladderCounter + apexGap, tier: t.name, division: 'I', isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
-      ladderCounter += apexGap;
-    } else {
-      divisions.forEach(d => {
-        ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
-        ladderCounter += 100;
-      });
-    }
-  });
-  maxY = ladder[ladder.length - 1].max;
-  
   fetchMatchesAndLps();
   document.addEventListener("scroll", (event) => {
     if(!isScrolling) {
@@ -136,6 +123,36 @@ window.onload = () => {
       left: event.deltaY < 0 ? -30 : 30,
     });
   }, {passive: false});
+};
+
+const initApexTiers = () => {
+  //gonna need to fetch the right lps for GM and Chall one day
+  const apexGap = currentSort.type === 's15' ? 250 : 600;
+  ladderCounter = 0;
+  ladder = [];
+  tiers.forEach(t => {
+    if(isApexTier(t.name)) {
+      ladder.push({min: ladderCounter, max: ladderCounter + apexGap, tier: t.name, division: 'I', isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
+      ladderCounter += apexGap;
+    } else {
+      divisions.forEach(d => {
+        ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
+        ladderCounter += 100;
+      });
+    }
+  });
+  maxY = ladder[ladder.length - 1].max;
+  
+  const gm = ladder.find(l => l.tier === 'Grandmaster')?.min;
+  const chall = ladder.find(l => l.tier === 'Challenger')?.min;
+  yTicks = [];
+  for(let i = 0; i < 5000; i += 100) {
+    yTicks.push({value: i});
+    if(gm > i && gm < i + 100)
+      yTicks.push({value: gm});
+    if(chall > i && chall < i + 100)
+      yTicks.push({value: chall});
+  }
 };
 
 const init = () => {
@@ -171,6 +188,7 @@ const init = () => {
 };
 
 const fetchMatchesAndLps = () => {
+  initApexTiers();
   init();
   getMatches(currentSort.type);
   getLps(currentSort.type);
@@ -889,9 +907,11 @@ const initChart = () => {
             min: Math.floor((minY - 100) / 100) * 100,
             max: Math.ceil((maxY + 100) / 100) * 100,//ladder[ladder.length - 1].max,
             display: true,
+            afterBuildTicks: (axis) => {
+              axis.ticks = yTicks;
+            },
             ticks: {
               offset: false,
-              stepSize: 1,
               autoSkip: false,
               includeBounds: false,
               color: (tick) => {
@@ -900,7 +920,7 @@ const initChart = () => {
               },
               callback: function(value, index, ticks) {
                 let l = ladder.find(o => value === o.min);
-                return l ? l.tier + ' ' + l.division : undefined;
+                return l ? l.tier + ' ' + l.division : '';
               },
             },
             grid: {
