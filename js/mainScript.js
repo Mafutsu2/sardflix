@@ -16,11 +16,10 @@ window.onload = async() => {
   });
   connect();
   
-  if(window.location.href.includes('sardflix.com/other')) {
+  if(window.location.href.includes('sardflix.com/transcriptions')) {
     document.getElementById('tabS').addEventListener('click', () => {window.location.pathname = '/'});
     showSongs();
   } else {
-    document.getElementById('tabAutre').addEventListener('click', () => {window.location.pathname = '/other'});
     document.getElementById('tabElo').addEventListener('click', () => {window.location.pathname = '/elo'});
     
     document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());

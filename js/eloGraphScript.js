@@ -89,6 +89,9 @@ let summonersInfo = {};
 let ladder = [];
 let ladderCounter = 0;
 let uniqueCounter = 0;
+let minY = 0;
+let maxY = 0;
+let maxX = 0;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -127,13 +130,21 @@ window.onload = () => {
 
 const initApexTiers = () => {
   //gonna need to fetch the right lps for GM and Chall one day
-  const apexGap = currentSort.type === 's15' ? 250 : 600;
   ladderCounter = 0;
   ladder = [];
   tiers.forEach(t => {
+    if(t.name === 'Master') {
+      apexMin = 0;
+      apexMax = currentSort.type !== 's15' ? 600 : 321;
+    } else if(t.name === 'Grandmaster') {
+      apexMin = currentSort.type !== 's15' ? 600 : 321;
+      apexMax = currentSort.type !== 's15' ? 1200 : 532;
+    } else if(t.name === 'Challenger') {
+      apexMin = currentSort.type !== 's15' ? 1200 : 532;
+      apexMax = 2300;
+    }
     if(isApexTier(t.name)) {
-      ladder.push({min: ladderCounter, max: ladderCounter + apexGap, tier: t.name, division: 'I', isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
-      ladderCounter += apexGap;
+      ladder.push({min: ladderCounter + apexMin, max: ladderCounter + apexMax, tier: t.name, division: 'I', isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
     } else {
       divisions.forEach(d => {
         ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
@@ -203,7 +214,6 @@ const openOPGG = (url) => {
   return false;
 };
 
-let minY = 0, maxY = 0, maxX = 0;
 const getMatches = async(season) => {
   const response = await fetch('https://api.sardflix.com/matches?season=' + season);
   if(response.status !== 200) {
@@ -245,7 +255,6 @@ const start = async() => {
     let versions = await response.json();
     currentVersion = versions[0];
     initCards(allData, champInfo, versions);
-    initCurrentGameCards(versions);
   }
 };
 
@@ -256,56 +265,6 @@ const updateTimer = (gameId, startTimestamp) => {
   let element = document.getElementById('current_' + gameId);
   if(element)
     element.textContent = `~ ${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-};
-
-const initCurrentGameCards = async(versions) => {
-  const responseChampions = await fetch(`https://ddragon.leagueoflegends.com/cdn/${versions[0]}/data/en_US/champion.json`);
-  const champions = await responseChampions.json();
-  const responseQueues = await fetch(`https://static.developer.riotgames.com/docs/lol/queues.json`);
-  const queues = await responseQueues.json();
-  
-  const response = await fetch('https://api.sardflix.com/current-match');
-  if(response.status === 200) {
-    let innerHTML = '';
-    let currentMatches = await response.json();
-    currentMatches.forEach(m => {
-      let champion = '';
-      for(let key in champions.data) {
-        if(champions.data[key].key === m.champion_id + '')
-          champion = key;
-      }
-      let gamemode = queues.find(q => q.queueId === m.queue_id);
-      let date = new Date(m.game_start);
-      setInterval(() => updateTimer(m.game_id, m.game_start), 1000);
-      let escapedName = encodeURIComponent(m.name.replace('#', '-'));
-      innerHTML += `
-        <div class="card bg-[#f5d74226] border-[1px] border-[#f5d742]">
-          <div class="flex justify-between text-[12px] opacity-80">
-            <div class="cursor-pointer transition-colors duration-200 ease-out hover:text-white" onclick="openOPGG('https://www.op.gg/summoners/euw/${escapedName}')">${m.name}</div>
-            <div id="current_${m.game_id}"></div>
-          </div>
-          <div class="flex grow text-[14px]">
-            <div class="flex flex-col">
-              <div class="flex items-center grow text-[25px] font-semibold">
-                <div class="inline-flex items-center">In Game</div>
-              </div>
-            </div>
-            <div class="flex flex-col justify-center items-end grow mr-[10px]">
-              <div class="max-w-[100px] text-right opacity-60">${gamemode ? gamemode.description : 'Unknown gamemode'}</div>
-            </div>
-            <div class="flex justify-end items-center">
-              <div class="flex justify-center items-center">
-                <div class="flex justify-center items-center w-[40px] h-[40px] overflow-hidden rounded-[6px]">
-                  <img class="w-[50px] h-[50px] max-w-none" src="https://ddragon.leagueoflegends.com/cdn/${versions[0]}/img/champion/${champion}.png" alt="${champion}" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-    document.getElementById('currentGameCards').innerHTML = innerHTML;
-  }
 };
 
 const initCards = (allData, champInfo, versions) => {
@@ -775,6 +734,8 @@ const formatData2 = (allData) => {
   minY = Math.min(...visibleData.map(item => item[1].minY));
   maxY = Math.max(...visibleData.map(item => item[1].maxY));
   maxX = Math.max(...visibleData.map(item => item[1].nbGame));
+  minY = Math.floor((minY - 100) / 100) * 100;
+  maxY = Math.ceil((maxY + 100) / 100) * 100;
   return newUserDatasets;
 };
 
@@ -904,8 +865,8 @@ const initChart = () => {
             axis: 'y',
             type: 'linear',
             beginAtZero: false,
-            min: Math.floor((minY - 100) / 100) * 100,
-            max: Math.ceil((maxY + 100) / 100) * 100,//ladder[ladder.length - 1].max,
+            min: minY,
+            max: maxY,
             display: true,
             afterBuildTicks: (axis) => {
               axis.ticks = yTicks;
@@ -920,13 +881,14 @@ const initChart = () => {
               },
               callback: function(value, index, ticks) {
                 let l = ladder.find(o => value === o.min);
-                return l ? l.tier + ' ' + l.division : '';
+                return l && value >= minY && value <= maxY ? l.tier + ' ' + l.division : '';
               },
             },
             grid: {
               color: (tick) => {
                 let found = ladder.find(l => tick.tick.value >= l.min && tick.tick.value < l.max);
-                return found && found.colorGrid ? found.colorGrid : 'rgba(200, 200, 200, 0.08)';
+                let color = found && found.colorGrid ? found.colorGrid : 'rgba(200, 200, 200, 0.08)';
+                return tick.tick.value >= minY && tick.tick.value <= maxY ? color : '';
               },
               tickBorderDash: [5, 5],
               z: 1
@@ -941,7 +903,7 @@ const initChart = () => {
             type: 'linear',
             beginAtZero: true,
             min: 0,
-            max: maxX+1,
+            max: maxX + 1,
             ticks: {
               offset: true,
               stepSize: 1,
@@ -1092,13 +1054,15 @@ const initChart = () => {
               
               const visibleData = filterHidden(summonersInfo);
 
-              const new_minY = Math.min(...visibleData.map(item => item[1].minY));
-              const new_maxY = Math.max(...visibleData.map(item => item[1].maxY));
-              const new_maxX = Math.max(...visibleData.map(item => item[1].nbGame));
+              minY = Math.min(...visibleData.map(item => item[1].minY));
+              maxY = Math.max(...visibleData.map(item => item[1].maxY));
+              maxX = Math.max(...visibleData.map(item => item[1].nbGame));
+              minY = Math.floor((minY - 100) / 100) * 100;
+              maxY = Math.ceil((maxY + 100) / 100) * 100;
 
-              stackedLine.options.scales.y.min= Math.floor((new_minY - 100) / 100) * 100;
-              stackedLine.options.scales.y.max = Math.ceil((new_maxY + 100) / 100) * 100;
-              stackedLine.options.scales.x.max = new_maxX +1;
+              stackedLine.options.scales.y.min= minY;
+              stackedLine.options.scales.y.max = maxY;
+              stackedLine.options.scales.x.max = maxX + 1;
               stackedLine.update();
 
               allData.forEach(d => {
