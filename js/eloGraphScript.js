@@ -135,19 +135,19 @@ const initApexTiers = () => {
   tiers.forEach(t => {
     if(t.name === 'Master') {
       apexMin = 0;
-      apexMax = currentSort.type !== 's15' ? 600 : 321;
+      apexMax = currentSort.type !== 's15' ? 600 : 324;
     } else if(t.name === 'Grandmaster') {
-      apexMin = currentSort.type !== 's15' ? 600 : 321;
+      apexMin = currentSort.type !== 's15' ? 600 : 324;
       apexMax = currentSort.type !== 's15' ? 1200 : 532;
     } else if(t.name === 'Challenger') {
       apexMin = currentSort.type !== 's15' ? 1200 : 532;
       apexMax = 2300;
     }
     if(isApexTier(t.name)) {
-      ladder.push({min: ladderCounter + apexMin, max: ladderCounter + apexMax, tier: t.name, division: 'I', isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
+      ladder.push({min: ladderCounter + apexMin, max: ladderCounter + apexMax, tier: t.name, division: 'I', lp: apexMin, isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
     } else {
       divisions.forEach(d => {
-        ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
+        ladder.push({min: ladderCounter, max: ladderCounter + 100, tier: t.name, division: d, lp: 0, color: t.color, colorText: t.colorText, colorGrid: t.colorGrid});
         ladderCounter += 100;
       });
     }
@@ -881,7 +881,9 @@ const initChart = () => {
               },
               callback: function(value, index, ticks) {
                 let l = ladder.find(o => value === o.min);
-                return l && value >= minY && value <= maxY ? l.tier + ' ' + l.division : '';
+                if(!l || value < minY || value > maxY)
+                  return '';
+                return l.isApexTier ? [l.tier, l.lp + ' LP'] : l.tier + ' ' + l.division;
               },
             },
             grid: {
