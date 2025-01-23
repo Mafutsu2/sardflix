@@ -92,6 +92,7 @@ let uniqueCounter = 0;
 let minY = 0;
 let maxY = 0;
 let maxX = 0;
+let masterY = 0;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -152,6 +153,7 @@ const initApexTiers = () => {
       });
     }
   });
+  masterY = ladderCounter;
   maxY = ladder[ladder.length - 1].max;
   
   const gm = ladder.find(l => l.tier === 'Grandmaster')?.min;
@@ -559,7 +561,8 @@ const formatData1 = () => {
     summoners[g.name] = y;
     lps.forEach(l => {
       if(l.timestamp > g.end_timestamp - fakeSecond && l.timestamp !== gameLps.timestamp && (matches[i+1] === undefined || l.timestamp < matches[i+1].end_timestamp - fakeSecond) && l.name === g.name) {
-        y = ladder.find(l2 => l2.tier.toLowerCase() === l.tier.toLowerCase() && l2.division === l.division).min + l.lp;
+        const currentLadder = ladder.find(l2 => l2.tier.toLowerCase() === l.tier.toLowerCase() && l2.division === l.division);
+        y = (currentLadder.isApexTier ? masterY : currentLadder.min) + l.lp;
         allData.push({
           match_id: getUniqueCounter(),
           outcome: 3,
