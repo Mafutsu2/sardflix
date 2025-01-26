@@ -93,12 +93,13 @@ let minY = 0;
 let maxY = 0;
 let maxX = 0;
 let masterY = 0;
+let isApexReady = false;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
 };
 
-window.onload = () => {
+window.onload = async() => {
   selectSort(null, 'seasons');
   
   closeAllAutocomplete();
@@ -110,7 +111,7 @@ window.onload = () => {
     onSort();
   });
   
-  fetchMatchesAndLps();
+  await fetchMatchesAndLps();
   document.addEventListener("scroll", (event) => {
     if(!isScrolling) {
       isScrolling = true;
@@ -129,19 +130,25 @@ window.onload = () => {
   }, {passive: false});
 };
 
-const initApexTiers = () => {
+const getApexTiers = async() => {
   //gonna need to fetch the right lps for GM and Chall one day
-  ladderCounter = 0;
-  ladder = [];
+  let thresholds = {gm: 250, chall: 500};
+  const response = await fetch('https://api.sardflix.com/thresholds');
+  if(response.status === 200) {
+    const responseThresholds = await response.json();
+    thresholds.gm = responseThresholds.gm;
+    thresholds.chall = responseThresholds.chall;
+  }
+  
   tiers.forEach(t => {
     if(t.name === 'Master') {
       apexMin = 0;
-      apexMax = currentSort.type !== 's15' ? 600 : 324;
+      apexMax = thresholds.gm - 1;
     } else if(t.name === 'Grandmaster') {
-      apexMin = currentSort.type !== 's15' ? 600 : 324;
-      apexMax = currentSort.type !== 's15' ? 1200 : 532;
+      apexMin = thresholds.gm;
+      apexMax = thresholds.chall - 1;
     } else if(t.name === 'Challenger') {
-      apexMin = currentSort.type !== 's15' ? 1200 : 532;
+      apexMin = thresholds.chall;
       apexMax = 2300;
     }
     if(isApexTier(t.name)) {
@@ -158,7 +165,6 @@ const initApexTiers = () => {
   
   const gm = ladder.find(l => l.tier === 'Grandmaster')?.min;
   const chall = ladder.find(l => l.tier === 'Challenger')?.min;
-  yTicks = [];
   for(let i = 0; i < 5000; i += 100) {
     yTicks.push({value: i});
     if(gm > i && gm < i + 100)
@@ -166,6 +172,8 @@ const initApexTiers = () => {
     if(chall > i && chall < i + 100)
       yTicks.push({value: chall});
   }
+  isApexReady = true;
+  start();
 };
 
 const init = () => {
@@ -196,13 +204,17 @@ const init = () => {
 
   summonersInfo = {};
   uniqueCounter = 0;
+  ladderCounter = 0;
+  ladder = [];
+  yTicks = [];
+  isApexReady = false;
   document.getElementById('champInfo').innerText = '';
   document.getElementById('gameCards').innerText = '';
 };
 
 const fetchMatchesAndLps = () => {
-  initApexTiers();
   init();
+  getApexTiers();
   getMatches(currentSort.type);
   getLps(currentSort.type);
 };
@@ -244,7 +256,7 @@ const getLps = async(season) => {
 };
 
 const start = async() => {
-  if(matches.length > 0 && lps.length > 0){
+  if(isApexReady && matches.length > 0 && lps.length > 0){
     allData = formatData1();
     userDatasets = formatData2(allData);
     userDatasets.forEach((u, i) => {
