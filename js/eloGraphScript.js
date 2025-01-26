@@ -99,7 +99,7 @@ const getUniqueCounter = () => {
   return "" + uniqueCounter++;
 };
 
-window.onload = async() => {
+window.onload = () => {
   selectSort(null, 'seasons');
   
   closeAllAutocomplete();
@@ -111,7 +111,7 @@ window.onload = async() => {
     onSort();
   });
   
-  await fetchMatchesAndLps();
+  fetchMatchesAndLps();
   document.addEventListener("scroll", (event) => {
     if(!isScrolling) {
       isScrolling = true;
