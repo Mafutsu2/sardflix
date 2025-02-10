@@ -16,17 +16,29 @@ window.onload = async() => {
   });
   connect();
   
-  if(window.location.href.includes('sardflix.com/transcriptions')) {
-    document.getElementById('tabS').addEventListener('click', () => {window.location.pathname = '/'});
-    showSongs();
-  } else {
-    document.getElementById('tabElo').addEventListener('click', () => {window.location.pathname = '/elo'});
+  const isTranscriptsPage = window.location.href.includes('sardflix.com/transcripts');
+  if(isTranscriptsPage) {
+    sorts = [
+      {type: 'date', name: 'Date - newest', asc: false},
+      {type: 'date', name: 'Date - oldest', asc: true},
+    ];
     
-    document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());
-    document.getElementById('modal').addEventListener('click', () => {
-      document.getElementById('modal').style.display = 'none';
-      document.getElementById('player').src = '';
-    });
+    document.getElementById('tabS').addEventListener('click', () => {window.location.pathname = '/'});
+  } else {
+    sorts = [
+      {type: 'date', name: 'Date - newest', asc: false},
+      {type: 'date', name: 'Date - oldest', asc: true},
+      {type: 'name', name: 'A - Z', asc: true},
+      {type: 'name', name: 'Z - A', asc: false},
+      {type: 'views', name: 'Views - most', asc: false},
+      {type: 'views', name: 'Views - least', asc: true},
+      {type: 'votes', name: 'Votes - most', asc: false},
+      {type: 'votes', name: 'Votes - least', asc: true},
+      {type: 'random', name: 'Randomize', asc: true},
+    ];
+    
+    document.getElementById('tabTranscripts').addEventListener('click', () => {window.location.pathname = '/transcripts'});
+    
     document.getElementById('searchGame').addEventListener('keypress', onGameKeyPressed);
     document.getElementById('searchAuthor').addEventListener('keypress', onAuthorKeyPressed);
     "input click".split(" ").forEach((event) => {
@@ -35,37 +47,62 @@ window.onload = async() => {
     "input click".split(" ").forEach((event) => {
       document.getElementById('searchAuthor').addEventListener(event, onSearchAuthorTag);
     });
-    selectSort();
-    document.getElementById('selectedSort').addEventListener('click', (e) => {
-      e.stopPropagation();
-      onSort();
-    });
+  }
+  
+  document.getElementById('tabElo').addEventListener('click', () => {window.location.pathname = '/elo'});
+  
+  document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());
+  document.getElementById('modal').addEventListener('click', () => {
+    document.getElementById('modal').style.display = 'none';
+    document.getElementById('player').src = '';
+  });
+  
+  selectSort();
+  document.getElementById('selectedSort').addEventListener('click', (e) => {
+    e.stopPropagation();
+    onSort(!isTranscriptsPage);
+  });
+  
+  document.getElementById('searchButton').addEventListener('click', () => show(isTranscriptsPage, true));
+  document.getElementById('searchBox').addEventListener('keypress', (e) => {
+    clipId = null;
+    if(e.keyCode === 13)
+      show(isTranscriptsPage, true);
+  });
+  
+  window.addEventListener('scroll', () => {
+    if (window.scrollY + window.innerHeight >= document.body.offsetHeight - 90 && !isLoading && isMore) {
+      isLoading = true;
+      show(isTranscriptsPage, false);
+    }
+  });
+  closeAllAutocomplete();
+  document.addEventListener("click", (e) => {
+    if(e.target.className !== 'searchTag')
+      closeAllAutocomplete();
+  });
+  
+  if(isTranscriptsPage) {
+    rangeDate.start = new Date(1719748800000);
+    rangeDate.min = new Date(1719748800000);
+    initCalendar(false);
     
-    document.getElementById('searchButton').addEventListener('click', () => showClips(true));
-    document.getElementById('searchBox').addEventListener('keypress', (e) => {
-      clipId = null;
-      if(e.keyCode === 13)
-        showClips(true);
-    });
-    
-    window.addEventListener('scroll', () => {
-      if (window.scrollY + window.innerHeight >= document.body.offsetHeight - 90 && !isLoading && isMore) {
-        isLoading = true;
-        showClips(false);
-      }
-    });
-    closeAllAutocomplete();
-    document.addEventListener("click", (e) => {
-      if(e.target.className !== 'searchTag')
-        closeAllAutocomplete();
-    });
-    
+    showTranscripts(true);
+  } else {
+    rangeDate.start = new Date('2016-05-26T18:37:16Z');
+    rangeDate.min = new Date('2016-05-26T18:37:16Z');
     await initQueryString();
-    initCalendar();
-    
+    initCalendar(true);
     
     showClips(true);
   }
+};
+
+const show = (isTranscriptsPage, isNewRequest) => {
+  if(isTranscriptsPage)
+    showTranscripts(isNewRequest);
+  else
+    showClips(isNewRequest);
 };
 
 const initQueryString = async() => {
@@ -347,4 +384,10 @@ const twoDigits = (nb) => {
 
 const toLowerNoAccents = (text) => {
   return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+};
+
+const closeAllAutocomplete = () => {
+  document.querySelectorAll('.autocomplete > div').forEach(e => {
+    e.classList.add("autocompleteHide");
+  });
 };

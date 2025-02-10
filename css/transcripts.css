@@ -1,0 +1,48 @@
+#transcripts {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  max-width: 1400px;
+}
+
+.cardTranscript {
+  display: flex;
+  flex-direction: column;
+  width: 405px;
+  margin: 10px;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease-out;
+  animation: appear 1s ease-out 0s 1 normal;
+}
+.thumbnailTranscript {
+  position: relative;
+  margin-bottom: 10px;
+  width: 405px;
+  height: 230px;
+  border-radius: 8px;
+  background-color: rgb(50, 50, 50);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+.title {
+  bottom: 37px;
+  left: 6px;
+  max-width: 200px;
+}
+
+.nameTranscript {
+  display: -webkit-box;
+  -webkit-line-clamp: 5; /* Number of lines before truncation */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#text {
+  margin-top: 10px;
+}
+
+mark {
+  background-color: rgb(212, 204, 51);
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" type="text/css" href="css/stylesheet.css" />
+  <link rel="stylesheet" type="text/css" href="css/stylesheetMain.css" />
+  <link rel="stylesheet" type="text/css" href="css/stylesheetOptions.css" />
+  <link rel="stylesheet" type="text/css" href="css/transcripts.css" />
+  <title>Sardflix</title>
+</head>
+<body>
+  <div id="container">
+    <div id="modal" style="display: none">
+      <div id="window">
+        <iframe id="player" src="" allowfullscreen></iframe>
+        <div id="text"></div>
+      </div>
+    </div>
+    <div id="topOptions">
+      <div id="nav">
+        <div id="discord">
+          <div><span id="linkIcon" class="material-symbols-rounded">link</span></div>
+          <div id="avatar"></div>
+        </div>
+        <div id="tabS">Clips</div>
+        <div id="tabTranscripts" class="active">Transcripts</div>
+        <div id="tabElo">Elo</div>
+      </div>
+      <div id="search">
+        <input id="searchBox" type="text" placeholder="Search...">
+        <div id="searchButton">
+          <span class="material-symbols-rounded">search</span>
+        </div>
+      </div>
+    </div>
+    <div id="main">
+      <div id="leftOptions">
+        <div id="sort">
+          <div id="selectedSort" class="searchTag"></div>
+          <div class="autocomplete">
+            <div id="sortOptions">
+            </div>
+          </div>
+        </div>
+        <div id="date">
+          <div id="datepicker"></div>
+        </div>
+      </div>
+      <div id="results">
+        <div id="info"></div>
+        <div id="transcripts"></div>
+        <div id="loading"></div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@easepick/bundle@1.2.1/dist/index.umd.min.js"></script>
+  <script src="js/faviconScript.js"></script>
+  <script src="js/calendarScript.js"></script>
+  <script src="js/selectScript.js"></script>
+  <script src="js/transcriptsScript.js"></script>
+  <script src="js/mainScript.js"></script>
+</body>
+</html>

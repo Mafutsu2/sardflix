@@ -87,12 +87,6 @@ const onSearchAuthorTag = async (e) => {
   }, 500);
 };
 
-const closeAllAutocomplete = () => {
-  document.querySelectorAll('.autocomplete > div').forEach(e => {
-    e.classList.add("autocompleteHide");
-  });
-};
-
 const addTag = (item, which) => {
   /* Should look like this
   <div class="tag">

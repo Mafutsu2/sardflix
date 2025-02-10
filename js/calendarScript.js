@@ -1,6 +1,6 @@
-let rangeDate = {start: new Date('2016-05-26T18:37:16Z'), end: new Date(), endIncluded: new Date(), min: new Date('2016-05-26T18:37:16Z'), max: new Date()};
+let rangeDate = {start: new Date(), end: new Date(), endIncluded: new Date(), min: new Date(), max: new Date()};
 
-const initCalendar = () => {
+const initCalendar = (isClips) => {
   const picker = new easepick.create({
     element: document.getElementById('datepicker'),
     css: [
@@ -35,7 +35,10 @@ const initCalendar = () => {
         rangeDate.end = e.detail.end;
         rangeDate.endIncluded = rangeDate.end;
         rangeDate.endIncluded.setHours(24, 0, 0);
-        showClips(true);
+        if(isClips)
+          showClips(true);
+        else
+          showTranscripts(true);
       });
     }
   });
