@@ -1,14 +1,4 @@
-const sorts = [
-  {type: 'date', name: 'Date - newest', asc: false},
-  {type: 'date', name: 'Date - oldest', asc: true},
-  {type: 'name', name: 'A - Z', asc: true},
-  {type: 'name', name: 'Z - A', asc: false},
-  {type: 'views', name: 'Views - most', asc: false},
-  {type: 'views', name: 'Views - least', asc: true},
-  {type: 'votes', name: 'Votes - most', asc: false},
-  {type: 'votes', name: 'Votes - least', asc: true},
-  {type: 'random', name: 'Randomize', asc: true},
-];
+let sorts = [];
 const sortsSeasons = [
   {type: 's15', name: 'Season 15'},
   {type: 's14-3', name: 'Season 14 - Split 3'},
@@ -16,7 +6,7 @@ const sortsSeasons = [
 let currentSort;
 let currentSortType;
 
-const onSort = (e) => {
+const onSort = (isClips) => {
   let sortOptions = document.getElementById('sortOptions');
   sortOptions.innerHTML = '';
   
@@ -39,8 +29,10 @@ const onSort = (e) => {
         selectSort(s, currentSortType);
         if(currentSortType === 'seasons')
           fetchMatchesAndLps();
-        else
+        else if(isClips)
           showClips(true);
+        else
+          showTranscripts(true);
       });
       sortOptions.appendChild(sort);
     }
