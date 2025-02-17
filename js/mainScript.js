@@ -334,16 +334,16 @@ const updateVote = (userVote, voteNbEl, votesEl) => {
 const getClips = async() => {
   let startDate = rangeDate.start;
   let endDate = rangeDate.endIncluded;
-  startDate = '&startDate=' + escape(startDate.toISOString());
-  endDate = '&endDate=' + escape(endDate.toISOString());
+  startDate = '&startDate=' + startDate.getTime();
+  endDate = '&endDate=' + endDate.getTime();
   
-  let clipIdStr = clipId ? '&clip_id=' + escape(clipId) : '';
+  let clipIdStr = clipId ? '&clip_id=' + encodeURIComponent(clipId) : '';
   
   let search = document.getElementById('searchBox').value;
-  search = search ? '&search=' + escape(search) : '';
+  search = search ? '&search=' + encodeURIComponent(search) : '';
   
-  let gameTagsStr = '&games=' + escape(JSON.stringify(gameTags.map(g => g.game_id)));
-  let authorTagsStr = '&authors=' + escape(JSON.stringify(authorTags));
+  let gameTagsStr = '&games=' + encodeURIComponent(JSON.stringify(gameTags.map(g => g.game_id)));
+  let authorTagsStr = '&authors=' + encodeURIComponent(JSON.stringify(authorTags));
   
   let sortType = '&sorttype=' + currentSort.type;
   let sortAsc = '&sortasc=' + (currentSort.asc ? 1 : 0);
