@@ -128,10 +128,42 @@ window.onload = () => {
       left: event.deltaY < 0 ? -30 : 30,
     });
   }, {passive: false});
+  
+  document.getElementById('minXButton').addEventListener("click", (event) => {
+    changeMinX();
+  });
+  document.getElementById('minX').addEventListener('keypress', (e) => {
+    if(e.keyCode === 13)
+      changeMinX();
+  });
+};
+
+const changeMinX = () => {
+  let newMinX = document.getElementById('minX').value;
+  newMinX = !isNaN(newMinX) && newMinX >= 0 && newMinX < maxX ? parseInt(newMinX) : 0;
+  stackedLine.options.scales.x.min = newMinX;
+  
+  let newMinY = 99999;
+  let newMaxY = 0;
+  userDatasets.forEach(u => {
+    if(!u.hidden && u.data.length > newMinX) {
+      for(let i = newMinX; i < u.data.length; i++) {
+        newMinY = u.data[i].y < newMinY ? u.data[i].y : newMinY;
+        newMaxY = u.data[i].y > newMaxY ? u.data[i].y : newMaxY;
+      }
+    }
+  });
+  newMinY = Math.floor((newMinY - 100) / 100) * 100;
+  newMaxY = Math.ceil((newMaxY + 100) / 100) * 100;
+  stackedLine.options.scales.y.min = newMinY;
+  stackedLine.options.scales.y.max = newMaxY;
+  minY = newMinY;
+  maxY = newMaxY;
+  
+  stackedLine.update();
 };
 
 const getApexTiers = async() => {
-  //gonna need to fetch the right lps for GM and Chall one day
   let thresholds = {gm: 250, chall: 500};
   const response = await fetch('https://api.sardflix.com/thresholds');
   if(response.status === 200) {
