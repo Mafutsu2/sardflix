@@ -223,7 +223,7 @@ const showClips = async(isNewRequest) => {
     
     const image = document.createElement('img');
     image.className = 'image';
-    image.src = item.thumbnail_url;
+    image.src = item.thumbnail_url.replace('preview-480x272', 'preview-270x153');
     thumbnail.appendChild(image);
     
     const innerThumbnail = document.createElement('div');
