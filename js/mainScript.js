@@ -223,7 +223,7 @@ const showClips = async(isNewRequest) => {
     
     const image = document.createElement('img');
     image.className = 'image';
-    image.src = item.thumbnail_url.replace('preview-480x272', 'preview-270x153');
+    image.src = item.thumbnail_url.indexOf('clips-media-assets2') === -1 ? item.thumbnail_url.replace('preview-480x272', 'preview-270x153') : item.thumbnail_url;
     thumbnail.appendChild(image);
     
     const innerThumbnail = document.createElement('div');
