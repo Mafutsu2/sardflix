@@ -353,7 +353,7 @@ const initCards = (allData, champInfo, versions) => {
       lpDiff = '';
     let date = new Date(d.timestamp);
     
-    let kda = 'Dodge';
+    let kda = d.lpDiff < -15 ? 'Decay' : 'Dodge';
     let cs = '', champion = '', lp = '';
     if(d.outcome !== 3) {
       kda = '';
@@ -604,7 +604,7 @@ const formatData1 = () => {
     });
     summoners[g.name] = y;
     lps.forEach(l => {
-      if(l.timestamp > g.end_timestamp - fakeSecond && l.timestamp !== gameLps.timestamp && (matches[i+1] === undefined || l.timestamp < matches[i+1].end_timestamp - fakeSecond) && l.name === g.name) {
+      if(l.timestamp > g.end_timestamp - fakeSecond && l.timestamp !== gameLps.timestamp && (nextGame === undefined || l.timestamp < nextGame.end_timestamp - fakeSecond) && l.name === g.name) {
         const currentLadder = ladder.find(l2 => l2.tier.toLowerCase() === l.tier.toLowerCase() && l2.division === l.division);
         y = (currentLadder.isApexTier ? masterY : currentLadder.min) + l.lp;
         allData.push({
@@ -1197,7 +1197,7 @@ const initChart = () => {
                   `;
                 }
                 
-                let displayChampion = `<div">Dodge</div>`;
+                let displayChampion = tooltipLpDiff < -15 ? `<div">Decay</div>` : `<div">Dodge</div>`;
                 if(tooltipOutcome !== 3) {
                   displayChampion = `
                     <img class="w-[17px] h-[17px] mr-[2px] rounded-[4px] max-w-none" src="assets/icon-position-${tooltipLane.toLowerCase()}.png" />
