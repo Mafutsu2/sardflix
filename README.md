@@ -2,6 +2,7 @@
 
 https://www.sardflix.com/elo
 
+<img alt="elo.PNG" src="/elo.PNG" width="700">
 
 ### Dev
 
