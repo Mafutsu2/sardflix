@@ -94,6 +94,7 @@ let maxY = 0;
 let maxX = 0;
 let masterY = 0;
 let isApexReady = false;
+let interPrank = null;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -136,6 +137,19 @@ window.onload = () => {
     if(e.keyCode === 13)
       changeMinX();
   });
+  
+  interPrank = setInterval(fetchPrankex, 2000);
+};
+
+const fetchPrankex = async() => {
+  const response = await fetch('https://api.sardflix.com/healthcheck');
+  if(response.status === 200) {
+    const responsePrankex = await response.json();
+    if(responsePrankex.isDown === true) {
+      activatePrankex();
+      clearInterval(interPrank);
+    }
+  }
 };
 
 const changeMinX = () => {
@@ -1238,3 +1252,175 @@ const initChart = () => {
   });
 
 };
+
+
+// PRANKEX TIME
+
+const gifs = [
+  'top37.png',
+  '1610.gif',
+  'alignement2.png',
+  'baussing.gif',
+  'bouloventre.gif',
+  'box.gif',
+  'box2.gif',
+  'calv.gif',
+  'deludown_1.gif',
+  'doxx.gif',
+  'giffle.gif',
+  'h.gif',
+  'loprode.gif',
+  'masterd4.gif',
+  'mejais.gif',
+  'meme-rats.gif',
+  'nez.gif',
+  'oula.gif',
+  'rorospin.gif',
+  'sardoche-milk-bottle.gif',
+  'sardpompe.gif',
+  'sport.gif',
+  'twists.gif',
+  'ticket.gif',
+  'vomiQ.gif',
+  'chat.png',
+  'pzn.png',
+  'dota.png',
+  'ugs8.png',
+  'nichaudnifroid.jpg',
+  'sard1610.png',
+  'sardAlousmas.PNG',
+  'golem_serpent.png',
+  'sardTwomp.gif',
+  'sardHourglass.jpg',
+  'sardolabrocante.png',
+  'chatting.gif',
+  'rat-dance2.gif',
+  'sardoche-sard-scare.gif',
+  'sport2.gif',
+  'chute.png',
+  'splitvelkoz.png',
+  'fiora.gif',
+  'ult.png',
+  'art.gif',
+  'bdfdp.gif',
+  'bricksard.gif',
+  'btm.gif',
+  'dab.gif',
+  'deforme.gif',
+  'epaules.gif',
+  'filosof.gif',
+  'mature.gif',
+  'minecraft-hoglin.gif',
+  'nul-nullissime.gif',
+  'sardoche-dance.gif',
+  'sport3.gif',
+  'tgmlt.gif',
+  'trou2.gif',
+  'zinedineblk.gif',
+  'ctsurenfait.gif',
+  'age.png',
+  'juteux.gif',
+  'PermaSilver.gif',
+  'rage34.gif',
+  'rorotwerk.gif',
+  'sardaaaa.gif',
+  'sardgragas.png',
+  'SardocheAzrael.gif',
+  'sardpres.gif',
+  'sardsad2.gif',
+  'sardthrow.gif',
+];
+
+let gifZIndex = 1001;
+const activatePrankex = () => {
+  const mainDiv = document.createElement('div');
+  mainDiv.style.position = 'absolute';
+  mainDiv.style.width = '100vw';
+  mainDiv.style.height = '100vh';
+  mainDiv.style.overflow = 'hidden';
+  mainDiv.style.zIndex = 1000;
+  document.getElementById('container').appendChild(mainDiv);
+  
+  const memeDiv = document.createElement('div');
+  memeDiv.id = 'memes';
+  memeDiv.style.position = 'fixed';
+  memeDiv.style.width = '100vw';
+  memeDiv.style.height = '100vh';
+  memeDiv.style.overflow = 'hidden';
+  mainDiv.appendChild(memeDiv);
+  
+  const roiDesGoldsDiv = document.createElement('div');
+  roiDesGoldsDiv.style.position = 'relative';
+  roiDesGoldsDiv.style.width = '100vw';
+  roiDesGoldsDiv.style.height = '100vh';
+  roiDesGoldsDiv.style.display = 'flex';
+  roiDesGoldsDiv.style.justifyContent = 'center';
+  roiDesGoldsDiv.style.alignItems = 'center';
+  roiDesGoldsDiv.style.zIndex = 100000;
+  memeDiv.appendChild(roiDesGoldsDiv);
+  
+  const roiDesGolds = document.createElement('video');
+  roiDesGolds.controls = true;
+  roiDesGolds.width = '500';
+  roiDesGolds.muted = true;
+  roiDesGolds.volume = 1;
+  roiDesGolds.autoplay = true;
+  roiDesGolds.loop = true;
+  roiDesGolds.innerHTML = '<source src="gif/gold.mp4" type="video/mp4" />';
+  roiDesGoldsDiv.appendChild(roiDesGolds);
+  
+  
+  
+  let topCounter = 0;
+  let interTop = setInterval(() => {
+    if(topCounter >= 10) {
+      clearInterval(interTop);
+      activateMemes(50, true);
+    }
+    placeRandomGif(0);
+    topCounter++;
+  }, 5);
+};
+
+const activateMemes = (delay, stop) => {
+  let gifsIndex = 0;
+  shuffleGifs(gifs);
+  let inter = setInterval(() => {
+    if(gifsIndex >= gifs.length - 1) {
+      if(stop) {
+        clearInterval(inter);
+        activateMemes(200, false);
+      }
+      shuffleGifs(gifs);
+      gifsIndex = 0;
+    }
+    placeRandomGif(gifsIndex);
+    gifsIndex++;
+  }, delay);
+};
+
+const shuffleGifs = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+const placeRandomGif = (gifsIndex) => {
+  const maxW = window.innerWidth - 300;
+  const maxH = window.innerHeight - 150; 
+  const randW = Math.floor(Math.random() * maxW);
+  const randH = Math.floor(Math.random() * maxH);
+  
+  const gif = document.createElement('img');
+  gif.src = 'gif/' + gifs[gifsIndex];
+  gif.style.position = 'absolute';
+  gif.style.left = randW + 'px';
+  gif.style.top = randH + 'px';
+  gif.style.zIndex = gifZIndex;
+  document.getElementById('memes').appendChild(gif);
+  
+  gifZIndex++;
+};
+
+
