@@ -390,30 +390,20 @@ const initCards = (allData, champInfo, versions) => {
         <span class="align-middle ml-[6px]">p ${d.outcome === 2 ? '-' : d.placement}/5</span>
       `;
     }
-    if(currentSession !== d.session) {
+    if(d.session !== -1 && d.session !== currentSession) {
       currentSession = d.session;
       let session = sessions.find(s => s.id === d.session);
       let newSessionEl = document.createElement('div');
-      let hiddenCount = 0;
-
-      session.summoners.forEach(summoner => {
-        hiddenCount += summonersInfo[summoner] && summonersInfo[summoner].hidden ? 1 : 0;
-      });
-      let display = '!block';
-      if(hiddenCount === session.summoners.length)
-        display = '!hidden';
+      let notHiddenSummoners = [];
       
-      newSessionEl.innerHTML += `
-        <div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold ${display}">
-          <div class="inline-flex items-center">
-            <span>SESSION: ${session.wins}</span>
-            <span class="my-0 mx-[1px] text-[16px] font-normal opacity-40">/</span>
-            <span>${session.loses}</span>
-            <span class="my-0 mx-[6px] text-[16px] font-normal opacity-40">&mdash;</span>
-            <span>${(session.wins / session.games * 100).toFixed(1)}%</span>
-          </div>
-        </div>
-      `;
+      session.summoners.forEach(summoner => {
+        if(!summonersInfo[summoner].hidden && !notHiddenSummoners.includes(summoner))
+          notHiddenSummoners.push(summoner);
+      });
+      session.notHiddenSummoners = notHiddenSummoners;
+      session.isHidden = false;
+      
+      newSessionEl.innerHTML = `<div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold !block"></div>`;
       gameCards.append(newSessionEl);
       session.element = newSessionEl;
     }
@@ -541,6 +531,45 @@ const initCards = (allData, champInfo, versions) => {
     });
     document.getElementById('champInfo').appendChild(champInfoDiv);
   });
+  
+  refreshSessions(null);
+};
+
+const refreshSessions = (summoner) => {
+  sessions.forEach(s => {
+    if(!s.isHidden && s.notHiddenSummoners.length === 0) {
+      s.element.children[0].classList.remove('!block');
+      s.element.children[0].classList.add('!hidden');
+      s.isHidden = true;
+    } else if(s.isHidden && s.notHiddenSummoners.length > 0) {
+      s.element.children[0].classList.remove('!hidden');
+      s.element.children[0].classList.add('!block');
+      s.isHidden = false;
+    }
+    
+    if(summoner === null || (s.notHiddenSummoners.length > 0 && s.summoners.includes(summoner))) {
+      setSessionDiv(s);
+    }
+  });
+};
+const setSessionDiv = (session) => {
+  let wins = 0;
+  let loses = 0;
+  for(let key in session.details) {
+    if(session.notHiddenSummoners.includes(key)) {
+      wins += session.details[key].wins;
+      loses += session.details[key].loses;
+    }
+  }
+  session.element.children[0].innerHTML = `
+    <div class="inline-flex items-center">
+      <span>SESSION: ${wins}</span>
+      <span class="my-0 mx-[1px] text-[16px] font-normal opacity-40">/</span>
+      <span>${loses}</span>
+      <span class="my-0 mx-[6px] text-[16px] font-normal opacity-40">&mdash;</span>
+      <span>${(wins / (wins + loses) * 100).toFixed(1)}%</span>
+    </div>
+  `;
 };
 
 const findSummonerNextGame = (game, index) => {
@@ -618,7 +647,7 @@ const formatData1 = () => {
           y,
           timestamp: l.timestamp,
           name: g.name,
-          session: sessionCounter,
+          session: -1,
         });
         summoners[g.name] = y;
       }
@@ -655,21 +684,27 @@ const formatData1 = () => {
   
   //sessions stats
   allData.forEach(d => {
-    let session = sessions.find(s => s.id === d.session);
-    if(!session) {
-      let sIndex = sessions.push({
-        id: d.session,
-        games: 0,
-        wins: 0,
-        loses: 0,
-        summoners: [],
-      });
-      session = sessions[sIndex - 1];
+    if(d.session !== -1) {
+      let session = sessions.find(s => s.id === d.session);
+      if(!session) {
+        let sIndex = sessions.push({
+          id: d.session,
+          details: {},
+          summoners: [],
+        });
+        session = sessions[sIndex - 1];
+      }
+      if(session.details[d.name] === undefined) {
+        session.details[d.name] = {
+          wins: 0,
+          loses: 0,
+        };
+        session.summoners.push(d.name);
+      }
+      
+      session.details[d.name].wins += d.outcome === 1 ? 1 : 0;
+      session.details[d.name].loses += d.outcome === 0 ? 1 : 0;
     }
-    session.games += d.outcome < 2 ? 1 : 0;
-    session.wins += d.outcome === 1 ? 1 : 0;
-    session.loses += d.outcome === 0 ? 1 : 0;
-    !session.summoners.includes(d.name) ? session.summoners.push(d.name) : null;
   });
   return allData;
 };
@@ -1125,21 +1160,16 @@ const initChart = () => {
                   }
                 }
               });
-
+              
               sessions.forEach(s => {
-                let hiddenCount = 0;
-                s.summoners.forEach(summoner => {
-                  hiddenCount += summonersInfo[summoner] && summonersInfo[summoner].hidden ? 1 : 0;
-                });
-
-                if(hiddenCount === s.summoners.length){
-                  s.element.classList.remove('!block');
-                  s.element.classList.add('!hidden');
-                } else {
-                  s.element.classList.remove('!hidden');
-                  s.element.classList.add('!block');
+                if(s.summoners.includes(legendItem.text)) {
+                  if(legendItem.hidden)
+                    s.notHiddenSummoners.splice(s.notHiddenSummoners.indexOf(legendItem.text), 1);
+                  else
+                    s.notHiddenSummoners.push(legendItem.text);
                 }
               });
+              refreshSessions(legendItem.text);
               
               let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
               let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
