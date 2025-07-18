@@ -334,12 +334,14 @@ const initCards = (allData, champInfo, versions) => {
       hoverClassName = 'loseHover';
       lpDiff = `(${d.lpDiff})`;
       position = 'bg-[#453030]';
-    } else if (d.outcome === 2) {
+    } else if (d.outcome === 2 && d.lpDiff === 0) {
       newEl.id = d.match_id;
       newEl.className = 'card remake';
       hoverClassName = 'remakeHover';
       position = 'bg-[#303030]';
     } else {
+      if(d.outcome === 2)
+        newEl.id = d.match_id;
       newEl.className = 'card remake';
       hoverClassName = 'remakeHover';
       lpDiff = `(${d.lpDiff < 0 ? d.lpDiff : '+' + d.lpDiff})`;
@@ -593,7 +595,8 @@ const formatData1 = () => {
     
     let nextGame = findSummonerNextGame(g, i);
     let gameLps = lps.find(l => g.name === l.name && l.timestamp > g.end_timestamp - fakeSecond && (!nextGame || nextGame.end_timestamp > l.timestamp || placements[placementsIndex].counter <= 5));
-    if(!gameLps || g.is_victory === 2) {
+    //dont include remake that lose lps
+    if(!gameLps || (!gameLps && g.is_victory === 2)) {
       for(let j = lps.length - 1; j > 0; j--) {
         if(g.name === lps[j].name && lps[j].timestamp <= g.end_timestamp - fakeSecond) {
           gameLps = lps[j];
