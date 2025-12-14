@@ -12,7 +12,7 @@ window.onload = async() => {
     if(token !== null && token !== '')
       disconnect();
     else
-      window.location.pathname = '/auth';
+      window.location.pathname = '/auth.html';
   });
   connect();
   
@@ -37,7 +37,7 @@ window.onload = async() => {
       {type: 'random', name: 'Randomize', asc: true},
     ];
     
-    document.getElementById('tabTranscripts').addEventListener('click', () => {window.location.pathname = '/transcripts'});
+    document.getElementById('tabTranscripts').addEventListener('click', () => {window.location.pathname = '/transcripts.html'});
     
     document.getElementById('searchGame').addEventListener('keypress', onGameKeyPressed);
     document.getElementById('searchAuthor').addEventListener('keypress', onAuthorKeyPressed);
@@ -49,7 +49,7 @@ window.onload = async() => {
     });
   }
   
-  document.getElementById('tabElo').addEventListener('click', () => {window.location.pathname = '/elo'});
+  document.getElementById('tabElo').addEventListener('click', () => {window.location.pathname = '/elo.html'});
   
   document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());
   document.getElementById('modal').addEventListener('click', () => {

@@ -92,6 +92,7 @@ let uniqueCounter = 0;
 let minY = 0;
 let maxY = 0;
 let maxX = 0;
+let staticMaxX = 0;
 let masterY = 0;
 let isApexReady = false;
 
@@ -136,12 +137,21 @@ window.onload = () => {
     if(e.keyCode === 13)
       changeMinX();
   });
+  document.getElementById('maxX').addEventListener('keypress', (e) => {
+    if(e.keyCode === 13)
+      changeMinX();
+  });
 };
 
 const changeMinX = () => {
   let newMinX = document.getElementById('minX').value;
-  newMinX = !isNaN(newMinX) && newMinX >= 0 && newMinX < maxX ? parseInt(newMinX) : 0;
+  let newMaxX = document.getElementById('maxX').value;
+  newMinX = !isNaN(newMinX) ? parseInt(newMinX) : 0;
+  newMaxX = !isNaN(newMaxX) ? parseInt(newMaxX) : staticMaxX;
+  newMinX = newMinX >= 0 && newMinX < newMaxX ? newMinX : 0;
+  newMaxX = newMaxX >= 0 && newMaxX > newMinX ? newMaxX : staticMaxX;
   stackedLine.options.scales.x.min = newMinX;
+  stackedLine.options.scales.x.max = newMaxX;
   
   let newMinY = 99999;
   let newMaxY = 0;
@@ -168,8 +178,11 @@ const getApexTiers = async() => {
   const response = await fetch('https://api.sardflix.com/thresholds');
   if(response.status === 200) {
     const responseThresholds = await response.json();
-    thresholds.gm = responseThresholds.gm;
-    thresholds.chall = responseThresholds.chall;
+    thresholds.gm = responseThresholds.apexThresholds.kr.grandmaster;
+    thresholds.chall = responseThresholds.apexThresholds.kr.challenger;
+    if(responseThresholds.salert) {
+      interPrank = setInterval(fetchPrankex, 2000);
+    }
   }
   
   tiers.forEach(t => {
@@ -279,7 +292,7 @@ const getLps = async(season) => {
     //To avoid a bug where it adds twice the LP to the database in under a second (remove it so id doesn't end up looking like a -0LP dodge)
     let newLps = [];
     lps.forEach((lp, i) => {
-      if(!(lps[i - 1] && lp.summoner_id === lps[i - 1].summoner_id && lp.timestamp - lps[i - 1].timestamp < 1000))
+      if(!(lps[i - 1] && lp.name === lps[i - 1].name && lp.timestamp - lps[i - 1].timestamp < 1000))
         newLps.push(lp);
     });
     lps = newLps;
@@ -410,10 +423,11 @@ const initCards = (allData, champInfo, versions) => {
       session.element = newSessionEl;
     }
     
+    let opggRegion = d.name === '프랑스 뱀#KR0' || d.name === 'Sard#CASS' ? 'kr' : 'euw';
     let escapedName = encodeURIComponent(d.name.replace('#', '-'));
     newEl.innerHTML += `
       <div class="flex justify-between text-[12px] opacity-80">
-        <div class="cursor-pointer transition-colors duration-200 ease-out hover:text-white" onclick="openOPGG('https://www.op.gg/summoners/euw/${escapedName}')">${d.name}</div>
+        <div class="cursor-pointer transition-colors duration-200 ease-out hover:text-white" onclick="openOPGG('https://www.op.gg/summoners/${opggRegion}/${escapedName}')">${d.name}</div>
         <div>${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}</div>
       </div>
       <div class="flex grow text-[14px]">
@@ -819,6 +833,7 @@ const formatData2 = (allData) => {
   minY = Math.min(...visibleData.map(item => item[1].minY));
   maxY = Math.max(...visibleData.map(item => item[1].maxY));
   maxX = Math.max(...visibleData.map(item => item[1].nbGame));
+  staticMaxX = maxX;
   minY = Math.floor((minY - 100) / 100) * 100;
   maxY = Math.ceil((maxY + 100) / 100) * 100;
   return newUserDatasets;
@@ -968,7 +983,7 @@ const initChart = () => {
                 let l = ladder.find(o => value === o.min);
                 if(!l || value < minY || value > maxY)
                   return '';
-                return l.isApexTier ? [l.tier, l.lp + ' LP'] : l.tier + ' ' + l.division;
+                return l.isApexTier ? [l.tier, l.lp + ' LP ( KR )'] : l.tier + ' ' + l.division;
               },
             },
             grid: {
