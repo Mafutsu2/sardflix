@@ -1,6 +1,6 @@
 # Sardflix
 
-https://www.sardflix.com/elo
+https://sardflix.com/elo.html
 
 <img alt="elo.PNG" src="/elo.PNG" width="700">
 
