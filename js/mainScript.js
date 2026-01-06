@@ -361,7 +361,7 @@ const getClips = async() => {
 };
 
 const openClip = (item) => {
-  let url = item.url.replace('https://clips.twitch.tv/', 'https://clips.twitch.tv/embed?parent=sardflix.com&parent=www.sardflix.com&autoplay=true&clip=');
+  let url = item.url.replace('https://clips.twitch.tv/', 'https://clips.twitch.tv/embed?parent=sardflix.com&parent=sardflix.com&autoplay=true&clip=');
   const player = document.getElementById('player');
   player.src = url;
   let innerWidth = window.innerWidth;

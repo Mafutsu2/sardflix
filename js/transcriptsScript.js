@@ -86,7 +86,7 @@ const showTranscripts = async(isNewRequest) => {
 
 const openVideo = (item) => {
   const time = secToString(item._source.timestamp_seconds);
-  const url = `https://player.twitch.tv/?video=${item._source.vod_id}&parent=www.sardflix.com&time=${time}`;
+  const url = `https://player.twitch.tv/?video=${item._source.vod_id}&parent=sardflix.com&time=${time}`;
   const player = document.getElementById('player');
   const text = document.getElementById('text');
   player.src = url;
