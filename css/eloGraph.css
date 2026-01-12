@@ -60,3 +60,18 @@
 #champInfo::-webkit-scrollbar-thumb:hover {
   background: rgb(100, 100, 100); 
 }
+
+.tooltipPopupCharacterText {
+  position: absolute;
+  visibility: hidden;
+  top: -20px;
+  padding: 4px 8px;
+  background-color: #282828;
+  border-radius: 4px;
+  border: 1px solid #5c5c5c;
+  z-index: 20;
+}
+
+.tooltipPopupCharacter:hover .tooltipPopupCharacterText {
+  visibility: visible;
+}

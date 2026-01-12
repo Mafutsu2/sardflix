@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--
+,,,(@@@@@.,,,,,,,,,,.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,/@@@@@,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+.,,,.,,,,*@@@@@.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,.@@@@@.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,@@@@@..,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,&@@@@,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,%@@@@.,,,,,@,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,.(@@@@,%@@@.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,*@@@@@@@*,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,.@@@@@@@@@@@,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,%@@@@@@@@@@@@.,,,,,,,,,,,,,,,,,,,,,,,,PASS,THE,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,.%@@@@@@,,,,,,,,,,,,,,,,,,,,,,,DELU,DOWN!,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,.,,,,,,,..*(,,,,,,,.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,.,,,,,,,,,,,,,,,,,,,,*,*,,,,,,,,,,,,,,,...,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,*/,,,,,,,,,,.,,*..(.,....,..,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,/,,.,,,,,,%,,,, %. %  /.,..%,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,.,,,,,,,,,,,,,@/,,,,,,#.,,#%,,,,#, . ,,,%@ ,.,*  #,,,
+,,,,,,,,,,,,,,,,,,,,,. ..,...,,,,,,,,,*@@@@@,,,,,,%(#.&%,,,   *  .&,.@&, ./% ,,,
+,,,,,,,,,,,,,,,,,,,.,,.         .,,,@@@@@*,,,,,,,,,  %%%%&,. .. &&/,  %,,. ..,,,
+,,,,,,,,,,,,,,,,,,,,,(#%%#%#((/,  *@@@@,,,,,,,,,,,,,(###%&%&&* ./ *./ . /  *,,,,
+,,,,,,,,,,,,,,,,,.,#%%%%%%%#(,,*/ &@,.,,,,,,,,,,,,,,,,((%&%&%&%#       .&%,,@@@.
+,,,,,,,,,,,,,,,,,,*%##/(%##,(((//*,,,,,,,,,,,,,,,,,,,,.*#%%%&&@&&%(*.(((%&@@&&@@
+,,,,,,,,,,,,,,,,,,,#%%%%%((/,(((/,,,,,,,,,,,,,,,,,,,,,,,.,#%&&@&&.%.&&@&&&&&&&@&
+,,,,,,,,,,,,,,,,,,,,%%%%##((/(((/,,,,,,,,,,,,,,,,,,,,,,,,,&@@&&&&.&,%@@&&&&&&&@%
+,,,,,,,,,,,,,,,,,,,,,####(////(,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,.,,,,,,,,@@@@.,,((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,#@@@,,,(@@@(,.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,@@@@@@@@@@.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,@@@@@@@@@@%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,@@@@@@@@@@@@&,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,..@@@@@@@/.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,*@&,.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet" />
+  <link href="css/eloGraphTW.css" rel="stylesheet">
+	<title>Sardflix</title>
+</head>
+
+<body class="m-0 bg-[#282828] text-[#c8c8c8] font-['Roboto'] leading-tight">
+	<div id="container" class="flex flex-nowrap w-full h-full">
+    <div class="grow h-screen">
+      <canvas id="eloGraph" class="w-full h-full fixed"></canvas>
+    </div>
+    <div class="w-[330px] flex flex-col flex-nowrap m-[20px] overflow-hidden">
+      <div class= "flex flex-nowrap items-center py-[10px]">
+        <div class="shrink-[0] text-[14px] mr-[10px]">X Start</div>
+        <input type="text" id="minX" name="minX" class="grow w-[50px] mr-[10px] px-[14px] py-[6px] font-['Roboto'] text-[14px] text-[rgb(220, 220, 220)] border-none rounded-[6px] bg-[#3c3c3c] outline-none" placeholder="0"/>
+        <div class="shrink-[0] text-[14px] mr-[10px]">X End</div>
+        <input type="text" id="maxX" name="maxX" class="grow w-[50px] mr-[10px] px-[14px] py-[6px] font-['Roboto'] text-[14px] text-[rgb(220, 220, 220)] border-none rounded-[6px] bg-[#3c3c3c] outline-none" placeholder="0"/>
+        <button id="minXButton" class="shrink-[0] px-[14px] py-[6px] font-['Roboto'] text-[14px] text-[rgb(220, 220, 220)] border-none rounded-[6px] bg-[#3c3c3c] transition-[background-color] duration-200 ease-out hover:bg-[#505050] outline-none">></button>
+      </div>
+      <div id="sort" class="pb-[10px] z-10">
+        <div id="selectedSort" class="px-[14px] py-[6px] cursor-pointer font-['Roboto'] text-[14px] text-[rgb(220, 220, 220)] border-none rounded-[6px] bg-[#3c3c3c] outline-none transition-[background-color] duration-200 ease-out hover:bg-[#505050]"></div>
+        <div class="relative">
+          <div id="sortOptions" class="absolute top-[2px] left-0 right-0 px-[10px] py-[4px] flex flex-col rounded-[6px] bg-[#3c3c3c]">
+          </div>
+        </div>
+      </div>
+      <div id="champInfo" class= "flex flex-nowrap mb-[10px] pb-[4px] overflow-x-scroll"></div>
+      <div id="champDetails" class="flex flex-row flex-wrap justify-center items-center text-[#c8c8c8]"></div>
+      <div id="currentGameCards" class="flex flex-col flex-nowrap"></div>
+      <div id="gameCards" class="flex flex-col flex-nowrap"></div>
+    </div>
+	</div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha512-SIMGYRUjwY8+gKg7nn9EItdD8LCADSDfJNutF9TPrvEo86sQmFMh6MyralfIyhADlajSxqc7G0gs7+MwWF/ogQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js" integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="js/selectScript.js"></script>
+  <script src="js/sf6GraphScript.js"></script>
+</body>
+</html>
