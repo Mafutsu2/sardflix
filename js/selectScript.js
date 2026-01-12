@@ -2,6 +2,15 @@ let sorts = [];
 const sortsSeasons = [
   {type: 's15', name: 'Season 15'},
   {type: 's14-3', name: 'Season 14 - Split 3'},
+  {type: 's14-2', name: 'Season 14 - Split 2'},
+  {type: 's14-1', name: 'Season 14 - Split 1'},
+  {type: 's13-2', name: 'Season 13 - Split 2'},
+  {type: 's13-1', name: 'Season 13 - Split 1'},
+  {type: 's12', name: 'Season 12'},
+  {type: 's11', name: 'Season 11'},
+  {type: 's10', name: 'Season 10'},
+  {type: 's9', name: 'Season 9'},
+  {type: 's8', name: 'Season 8'},
 ];
 const sf6SortsSeasons = [
   {type: 's10', name: 'Season 10'},

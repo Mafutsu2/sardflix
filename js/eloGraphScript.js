@@ -279,7 +279,7 @@ const getMatches = async(season) => {
     document.getElementById('container').innerHTML = 'Error';
   } else {
     matches = await response.json();
-    start();
+    start(season);
   }
 };
 
@@ -296,20 +296,24 @@ const getLps = async(season) => {
         newLps.push(lp);
     });
     lps = newLps;
-    start();
+    start(season);
   }
 };
 
-const start = async() => {
+const start = async(season) => {
   if(isApexReady && matches.length > 0 && lps.length > 0){
-    allData = formatData1();
+    const isOldSeason = ['s14-2', 's14-1', 's13-2', 's13-1', 's12', 's11', 's10', 's9', 's8'].includes(season);
+    allData = formatData1(isOldSeason);
     userDatasets = formatData2(allData);
     userDatasets.forEach((u, i) => {
       if(u.data.length > maxLength)
         maxLength = u.data.length;
     });
     initChart();
-    allData.sort((a, b) => b.timestamp - a.timestamp);
+    if(isOldSeason)
+      allData.reverse();
+    else
+      allData.sort((a, b) => b.timestamp - a.timestamp);
     let response = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
     let versions = await response.json();
     currentVersion = versions[0];
@@ -595,7 +599,7 @@ const findSummonerNextGame = (game, index) => {
   return nextGame;
 };
 
-const formatData1 = () => {
+const formatData1 = (isOldSeason) => {
   let fakeSecond = 2000;//Seconds to remove from games so that lp change dont happen before game finish. Otherwise it falsly marks the game as a dodge.
   let allData = [];
   let summoners = {};
@@ -608,7 +612,7 @@ const formatData1 = () => {
     placements[placementsIndex].counter += g.is_victory !== 2 ? 1 : 0;
     
     let nextGame = findSummonerNextGame(g, i);
-    let gameLps = lps.find(l => g.name === l.name && l.timestamp > g.end_timestamp - fakeSecond && (!nextGame || nextGame.end_timestamp > l.timestamp || placements[placementsIndex].counter <= 5));
+    let gameLps = lps.find(l => g.name === l.name && l.timestamp > g.end_timestamp - fakeSecond && (!nextGame || nextGame.end_timestamp > l.timestamp || placements[placementsIndex].counter <= 5 || isOldSeason));
     //dont include remake that lose lps
     if(!gameLps || (!gameLps && g.is_victory === 2)) {
       for(let j = lps.length - 1; j > 0; j--) {
