@@ -50,6 +50,7 @@ window.onload = async() => {
   }
   
   document.getElementById('tabElo').addEventListener('click', () => {window.location.pathname = '/elo.html'});
+  document.getElementById('tabSF6').addEventListener('click', () => {window.location.pathname = '/sf6.html'});
   
   document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());
   document.getElementById('modal').addEventListener('click', () => {
