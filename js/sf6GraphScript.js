@@ -268,11 +268,6 @@ const closeAllAutocomplete = () => {
   document.getElementById('sortOptions').classList.add("!hidden");
 };
 
-const openOPGG = (url) => {
-  window.open(url, "_blank", "noopener,noreferrer");
-  return false;
-};
-
 const getMatches = async(season) => {
   const response = await fetch('https://api.sardflix.com/sf6_matches?season=' + season);
   if(response.status !== 200) {
@@ -414,8 +409,8 @@ const initCards = (allData) => {
     let date = new Date(d.timestamp * 1000);
     newEl.innerHTML += `
       <div class="flex justify-between text-[12px] opacity-80">
-        <div class="cursor-pointer transition-colors duration-200 ease-out hover:text-white" onclick="openOPGG('https://www.streetfighter.com/6/buckler/profile/${d.fighterId}')">Sardoche VS ${d.vsFighter}</div>
-        <div>${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}</div>
+        <a class="cursor-pointer transition-colors duration-200 ease-out hover:text-white overflow-hidden whitespace-nowrap text-ellipsis" href="https://www.streetfighter.com/6/buckler/profile/${d.fighterId}" rel="noopener noreferrer" target="_blank">Sardoche VS ${d.vsFighter}</a>
+        <div class="pl-[6px] shrink-0">${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}</div>
       </div>
       <div class="flex grow text-[14px]">
         <div class="flex justify-end items-center">
