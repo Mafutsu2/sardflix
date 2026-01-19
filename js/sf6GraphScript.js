@@ -68,6 +68,7 @@ let isScrolling = false;
 let matches = [];
 let lps = [];
 let sessions = [];
+let searchPlayerSession = {};
 let userDatasets = [];
 let allData = [];
 let champInfo = [];
@@ -132,12 +133,68 @@ window.onload = () => {
     if(e.keyCode === 13)
       changeMinX();
   });
+  
+  document.getElementById('searchVsFighterButton').addEventListener("click", (event) => {
+    showVsFighter();
+  });
+  document.getElementById('searchVsFighter').addEventListener('keypress', (e) => {
+    if(e.keyCode === 13)
+      showVsFighter();
+  });
 };
 
 const getNumber = (value, defaultValue) => {
   const num = parseInt(value);
   return isNaN(num) || num === 0 ? defaultValue : num;
 }
+
+const showVsFighter = () => {
+  let fighterName = document.getElementById('searchVsFighter').value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  if(fighterName === '') {
+    let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
+    curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
+    allData.forEach(d => {
+      if(curvesHiddenVisibility[d.character]) {
+        d.element.classList.remove('!flex');
+        d.element.classList.add('!hidden');
+      } else {
+        d.element.classList.remove('!hidden');
+        d.element.classList.add('!flex');
+      }
+    });
+    
+    searchPlayerSession.element.children[0].classList.remove('!block');
+    searchPlayerSession.element.children[0].classList.add('!hidden');
+    refreshSessions(null);
+    return;
+  }
+  searchPlayerSession.element.children[0].classList.remove('!hidden');
+  searchPlayerSession.element.children[0].classList.add('!block');
+  
+  searchPlayerSession.details.fighter.wins = 0;
+  searchPlayerSession.details.fighter.losses = 0;
+  allData.forEach(d => {
+    if(d.vsFighter.toLowerCase().includes(fighterName)) {
+      if(d.outcome === 1)
+        searchPlayerSession.details.fighter.wins += 1;
+      else if(d.outcome === 0)
+        searchPlayerSession.details.fighter.losses += 1;
+      d.element.classList.remove('!hidden');
+      d.element.classList.add('!flex');
+      searchPlayerSession.isHidden = false;
+    } else {
+      d.element.classList.remove('!flex');
+      d.element.classList.add('!hidden');
+      searchPlayerSession.isHidden = true;
+    }
+  });
+  setSessionDiv(searchPlayerSession);
+  sessions.forEach(s => {
+    s.element.children[0].classList.remove('!block');
+    s.element.children[0].classList.add('!hidden');
+    s.isHidden = true;
+  });
+};
 
 const changeMinX = () => {
   let newMinX2 = getNumber(document.getElementById('minX').value, 0);
@@ -309,6 +366,23 @@ const updateTimer = (gameId, startTimestamp) => {
 const initCards = (allData) => {
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
+  let searchSession = document.createElement('div');
+  searchSession.innerHTML = `<div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold !hidden"></div>`;
+  gameCards.append(searchSession);
+  searchPlayerSession = {
+    id: -2,
+    details: {
+      fighter: {
+        wins: 0,
+        losses: 0,
+      }
+    },
+    summoners: ['fighter'],
+    notHiddenSummoners: ['fighter'],
+    isHidden: true,
+    element: searchSession
+  };
+  
   allData.forEach(d => {
     
     let newEl = document.createElement('div');
@@ -447,7 +521,7 @@ const initCards = (allData) => {
             return data.color;
         });
         //make curve appear in front when hovered
-        if(dataset.label === d.name) {
+        if(dataset.label === d.character) {
           dataset.order = -1;
           dataset.type = 'shadowLine';
         } else if(dataset.order !== dataset.defaultOrder) {
@@ -1115,7 +1189,7 @@ const initChart = () => {
               stackedLine.update();
 
               allData.forEach(d => {
-                if(d.name === legendItem.text) {
+                if(d.character === legendItem.text) {
                   if(legendItem.hidden){
                     d.element.classList.remove('!flex');
                     d.element.classList.add('!hidden');
