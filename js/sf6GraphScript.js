@@ -69,6 +69,7 @@ let matches = [];
 let lps = [];
 let sessions = [];
 let searchPlayerSession = {};
+let snipers = [];
 let userDatasets = [];
 let allData = [];
 let champInfo = [];
@@ -563,6 +564,42 @@ const initCards = (allData) => {
     stackedLine.update();
   });
   
+  snipers.sort((a, b) => b.games - a.games || a.wins - b.wins);
+  let sniperInfoDiv = document.createElement('div');
+  sniperInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
+  sniperInfoDiv.innerHTML = `
+    <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
+      <img class="w-[30px] h-[30px] max-w-none" src="assets/sniper.webp" alt="snipers" />
+    </div>
+    <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${snipers[0].games}</div>
+  `;
+  sniperInfoDiv.addEventListener('click', (e) => {
+    document.getElementById('champDetails').innerHTML = '';
+    if(openedStats !== 'Snipers') {
+      openedStats = 'Snipers';
+      
+      let sniperStats = `<div class="w-full text-center mb-[6px]">Snipers</div>`;
+      sniperStats += `<div class="w-full text-center"><table class="w-full"><tbody>`;
+      snipers.forEach(s => {
+        sniperStats += `
+          <tr class="text-[14px]">
+            <td class="text-center">${s.games}</td>
+            <td class="whitespace-nowrap">${Number(Math.round((s.wins / s.games * 100) + "e+1")  + "e-1")}% (${s.wins}<span class="text-[12px] opacity-60">W</span> - ${s.losses}<span class="text-[12px] opacity-60">L</span>)</td>
+            <td class="text-[12px] opacity-60">VS</td>
+            <td class="pl-[6px] text-left max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">${s.name}</td>
+          </tr>
+        `;
+      });
+      sniperStats += `</tbody></table></div>`;
+      document.getElementById('snipersDetails').innerHTML = sniperStats;
+    } else {
+      openedStats = '';
+      document.getElementById('snipersDetails').innerHTML = '';
+    }
+  });
+  document.getElementById('champInfo').appendChild(sniperInfoDiv);
+  
+  
   champInfo.sort((a, b) => b.games - a.games);
   champInfo.forEach((c, i) => {
     c.vsCharacters.sort((a, b) => b.games - a.games);
@@ -577,6 +614,7 @@ const initCards = (allData) => {
     `;
     champInfoDiv.innerHTML = champTxt;
     champInfoDiv.addEventListener('click', (e) => {
+      document.getElementById('snipersDetails').innerHTML = '';
       if(c.name !== openedStats) {
         openedStats = c.name;
         let statsFormated = [
@@ -731,6 +769,23 @@ const formatData1 = () => {
     }
     
     sessionCounter += (matches[i + 1] && matches[i + 1].timestamp > g.timestamp + 14400) ? 1 : 0;//4 hours
+  });
+  
+  //snipers stats
+  allData.forEach(d => {
+    let sniper = snipers.find(s => s.name === d.vsFighter);
+    if(!sniper) {
+      let sIndex = snipers.push({
+        name: d.vsFighter,
+        wins: 0,
+        losses: 0,
+        games: 0,
+      });
+      sniper = snipers[sIndex - 1];
+    }
+    sniper.wins += d.outcome === 1 ? 1 : 0;
+    sniper.losses += d.outcome === 0 ? 1 : 0;
+    sniper.games ++;
   });
   
   //sessions stats
