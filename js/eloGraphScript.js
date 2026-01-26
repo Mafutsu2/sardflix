@@ -333,7 +333,10 @@ const updateTimer = (gameId, startTimestamp) => {
 const initCards = (allData, champInfo, versions) => {
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
-  allData.forEach(d => {
+  const fragment1 = document.createDocumentFragment();
+  const fragment2 = document.createDocumentFragment();
+  const initialLoad = 20;
+  allData.forEach((d, index) => {
     let newEl = document.createElement('div');
     
     let lpDiff = '';
@@ -423,7 +426,10 @@ const initCards = (allData, champInfo, versions) => {
       session.isHidden = false;
       
       newSessionEl.innerHTML = `<div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold !block"></div>`;
-      gameCards.append(newSessionEl);
+      if(index > initialLoad)
+        fragment2.appendChild(newSessionEl);
+      else if(index <= initialLoad)
+        fragment1.appendChild(newSessionEl);
       session.element = newSessionEl;
     }
     
@@ -493,9 +499,21 @@ const initCards = (allData, champInfo, versions) => {
       });
       stackedLine.update();
     });
-    gameCards.append(newEl);
+    
+    if(index > initialLoad)
+      fragment2.appendChild(newEl);
+    else if(index < initialLoad)
+      fragment1.appendChild(newEl);
+    else {
+      fragment1.appendChild(newEl);
+      gameCards.appendChild(fragment1);
+    }
     d.element = newEl;
   });
+  //force rendering of fragment2 separatly
+  setTimeout(() => {
+    gameCards.appendChild(fragment2);
+  }, 0);
   
   gameCards.addEventListener('mouseleave', event => {
     userDatasets.forEach(dataset => {
@@ -920,38 +938,7 @@ const initChart = () => {
 
 
   const data = {
-    //labels: labels,
     datasets: [...userDatasets, ...tierDatasets]
-  };
-
-  const zoomOptions = {
-    limits: {
-      //x: {min: 0, max: maxLength},
-      //y: {min: 0, max: ladder[ladder.length - 1].max + 1}
-      //x: {min: 'original', max: 'original'},
-      //y: {min: 'original', max: 'original'},
-    },
-    pan: {
-      enabled: true,
-      mode: 'xy',
-      scaleMode: 'xy',
-      //onPanComplete({chart}) {
-      //  chart.update('none');
-      //}
-    },
-    zoom: {
-      wheel: {
-        enabled: true,
-      },
-      pinch: {
-        enabled: true
-      },
-      mode: 'xy',
-      scaleMode: 'xy',
-      onZoomComplete({chart}) {
-        chart.update();
-      }
-    }
   };
   
   Chart.defaults.color = 'rgb(200, 200, 200)';
@@ -1284,7 +1271,6 @@ const initChart = () => {
               tooltipEl.style.pointerEvents = 'none';
             },
           },
-          //zoom: zoomOptions,
         },
       }
   });
