@@ -143,13 +143,16 @@ window.onload = () => {
   });
 };
 
+const getNumber = (value, defaultValue) => {
+  const num = parseInt(value);
+  return isNaN(num) || num === 0 ? defaultValue : num;
+}
+
 const changeMinX = () => {
-  let newMinX = document.getElementById('minX').value;
-  let newMaxX = document.getElementById('maxX').value;
-  newMinX = !isNaN(newMinX) ? parseInt(newMinX) : 0;
-  newMaxX = !isNaN(newMaxX) ? parseInt(newMaxX) : staticMaxX;
-  newMinX = newMinX >= 0 && newMinX < newMaxX ? newMinX : 0;
-  newMaxX = newMaxX >= 0 && newMaxX > newMinX ? newMaxX : staticMaxX;
+  let newMinX2 = getNumber(document.getElementById('minX').value, 0);
+  let newMaxX = getNumber(document.getElementById('maxX').value, staticMaxX);
+  let newMinX = newMinX2 > 0 && newMinX2 < newMaxX ? newMinX2 : 0;
+  newMaxX = newMaxX < staticMaxX && newMaxX > newMinX2 ? newMaxX : staticMaxX;
   stackedLine.options.scales.x.min = newMinX;
   stackedLine.options.scales.x.max = newMaxX;
   
