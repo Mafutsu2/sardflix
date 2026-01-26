@@ -232,13 +232,14 @@ const getApexTiers = async() => {
     l.color = tier.color;
     l.colorText = tier.colorText;
     colorGrid = tier.colorGrid;
+    
+    yTicks.push({value: l.min});
+    if(l.tier === 'Platinum' || l.tier === 'Diamond')
+      yTicks.push({value: l.min + 600});
   });
   masterY = ladder[ladder.length - 1].min;
-  maxY = 30000;
+  maxY = 26000;
   
-  for(let i = 0; i < 30000; i += 200) {
-    yTicks.push({value: i});
-  }
   isApexReady = true;
   start();
 };
@@ -348,10 +349,7 @@ const start = async() => {
     });
     initChart();
     allData.sort((a, b) => b.timestamp - a.timestamp);
-    //let response = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-    //let versions = await response.json();
-    //currentVersion = versions[0];
-    initCards(allData);
+    await initCards(allData);
   }
 };
 
@@ -364,12 +362,95 @@ const updateTimer = (gameId, startTimestamp) => {
     element.textContent = `~ ${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 };
 
-const initCards = (allData) => {
+const initCards = async(allData) => {
+  snipers.sort((a, b) => b.games - a.games || a.wins - b.wins);
+  let sniperInfoDiv = document.createElement('div');
+  sniperInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
+  sniperInfoDiv.innerHTML = `
+    <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
+      <img class="w-[30px] h-[30px] max-w-none" src="assets/sniper.webp" alt="snipers" />
+    </div>
+    <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${snipers[0].games}</div>
+  `;
+  sniperInfoDiv.addEventListener('click', (e) => {
+    document.getElementById('champDetails').innerHTML = '';
+    if(openedStats !== 'Snipers') {
+      openedStats = 'Snipers';
+      
+      let sniperStats = `<div class="w-full text-center mb-[6px]">Snipers</div>`;
+      sniperStats += `<div class="w-full text-center"><table class="w-full"><tbody>`;
+      snipers.forEach(s => {
+        sniperStats += `
+          <tr class="text-[14px]">
+            <td class="text-center">${s.games}</td>
+            <td class="whitespace-nowrap">${Number(Math.round((s.wins / s.games * 100) + "e+1")  + "e-1")}% (${s.wins}<span class="text-[12px] opacity-60">W</span> - ${s.losses}<span class="text-[12px] opacity-60">L</span>)</td>
+            <td class="text-[12px] opacity-60">VS</td>
+            <td class="pl-[6px] text-left max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">${s.name}</td>
+          </tr>
+        `;
+      });
+      sniperStats += `</tbody></table></div>`;
+      document.getElementById('snipersDetails').innerHTML = sniperStats;
+    } else {
+      openedStats = '';
+      document.getElementById('snipersDetails').innerHTML = '';
+    }
+  });
+  document.getElementById('champInfo').appendChild(sniperInfoDiv);
+  
+  
+  champInfo.sort((a, b) => b.games - a.games);
+  champInfo.forEach((c, i) => {
+    c.vsCharacters.sort((a, b) => b.games - a.games);
+    let champInfoDiv = document.createElement('div');
+    champInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
+    let champIconUrl = i === 0 ? 'assets/champion.svg' : `assets/characters/character_${c.id}_l.png`;
+    let champTxt = `
+      <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
+        <img class="w-[30px] h-[30px] max-w-none" src="${champIconUrl}" alt="${c.name}" />
+      </div>
+      <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${c.games}</div>
+    `;
+    champInfoDiv.innerHTML = champTxt;
+    champInfoDiv.addEventListener('click', (e) => {
+      document.getElementById('snipersDetails').innerHTML = '';
+      if(c.name !== openedStats) {
+        openedStats = c.name;
+        let statsFormated = [
+          {key: 'Winrate', value: Number(Math.round((c.wins / c.games * 100) + "e+1")  + "e-1") + '% (' + c.wins + '<span class="text-[12px] opacity-60">W</span> - ' + c.losses + '<span class="text-[12px] opacity-60">L</span>)'},
+          {key: 'LP gained', value: c.totalLp + ' (' + (c.totalLp / c.games).toFixed(0), unit: '/game'},
+          {key: 'MR gained', value: c.totalMrLp + ' (' + (c.totalMrLp / c.games).toFixed(0), unit: '/game'},
+        ];
+        c.vsCharacters.forEach(v => statsFormated.push({key: `<img class="w-[20px] h-[20px] mr-[4px] max-w-none" src="assets/characters/character_${v.id}_l.png" alt="${v.name}" />` + v.name, value: Number(Math.round((v.wins / v.games * 100) + "e+1")  + "e-1") + '% (' + v.wins + '<span class="text-[12px] opacity-60">W</span> - ' + v.losses + '<span class="text-[12px] opacity-60">L</span>)'}));
+        let champStats = `<div class="w-full text-center mb-[6px]">${c.name}</div>`;
+        statsFormated.forEach(s => {
+          champStats += `
+            <div class="flex flex-col justify-center mb-[10px] mx-[5px] py-[6px] px-[10px] bg-[#5c5c5c26] border-[1px] border-[#5c5c5c] rounded-[8px]">
+              <div class="text-[12px] opacity-60 mb-[2px] flex items-center">${s.key}</div>
+              <div class="text-[14px] opacity-100">${s.value}${s.unit ? '<span class="text-[12px] opacity-60">' + s.unit + '</span>)' : ''}</div>
+            </div>
+          `;
+        });
+        document.getElementById('champDetails').innerHTML = champStats;
+      } else {
+        openedStats = '';
+        document.getElementById('champDetails').innerHTML = '';
+      }
+    });
+    document.getElementById('champInfo').appendChild(champInfoDiv);
+  });
+  
+  
+  
+  const initialLoad = 20;
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
+  const fragment1 = document.createDocumentFragment();
+  const fragment2 = document.createDocumentFragment();
   let searchSession = document.createElement('div');
   searchSession.innerHTML = `<div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold !hidden"></div>`;
-  gameCards.append(searchSession);
+  //gameCards.append(searchSession);
+  fragment1.appendChild(searchSession);
   searchPlayerSession = {
     id: -2,
     details: {
@@ -384,7 +465,7 @@ const initCards = (allData) => {
     element: searchSession
   };
   
-  allData.forEach(d => {
+  allData.forEach((d, index) => {
     
     let newEl = document.createElement('div');
     newEl.id = d.replayId;
@@ -464,7 +545,6 @@ const initCards = (allData) => {
     }
     
     if(d.session !== -1 && d.session !== currentSession) {
-      currentSession = d.session;
       let session = sessions.find(s => s.id === d.session);
       let newSessionEl = document.createElement('div');
       let notHiddenSummoners = [];
@@ -477,8 +557,15 @@ const initCards = (allData) => {
       session.isHidden = false;
       
       newSessionEl.innerHTML = `<div class="flex items-center mb-[4px] mt-[10px] p-[6px] text-[20px] font-semibold !block"></div>`;
-      gameCards.append(newSessionEl);
+      if(index > initialLoad)
+        fragment2.appendChild(newSessionEl);
+      else if(index <= initialLoad)
+        fragment1.appendChild(newSessionEl);
       session.element = newSessionEl;
+      
+      if(currentSession === -1)
+        setSessionDiv(session);
+      currentSession = d.session;
     }
     
     let date = new Date(d.timestamp * 1000);
@@ -550,9 +637,21 @@ const initCards = (allData) => {
       });
       stackedLine.update();
     });
-    gameCards.append(newEl);
+    
+    if(index > initialLoad)
+      fragment2.appendChild(newEl);
+    else if(index < initialLoad)
+      fragment1.appendChild(newEl);
+    else {
+      fragment1.appendChild(newEl);
+      gameCards.appendChild(fragment1);
+    }
     d.element = newEl;
   });
+  //force rendering of fragment2 separatly
+  setTimeout(() => {
+    gameCards.appendChild(fragment2);
+  }, 0);
   
   gameCards.addEventListener('mouseleave', event => {
     userDatasets.forEach(dataset => {
@@ -564,84 +663,8 @@ const initCards = (allData) => {
     stackedLine.update();
   });
   
-  snipers.sort((a, b) => b.games - a.games || a.wins - b.wins);
-  let sniperInfoDiv = document.createElement('div');
-  sniperInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
-  sniperInfoDiv.innerHTML = `
-    <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
-      <img class="w-[30px] h-[30px] max-w-none" src="assets/sniper.webp" alt="snipers" />
-    </div>
-    <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${snipers[0].games}</div>
-  `;
-  sniperInfoDiv.addEventListener('click', (e) => {
-    document.getElementById('champDetails').innerHTML = '';
-    if(openedStats !== 'Snipers') {
-      openedStats = 'Snipers';
-      
-      let sniperStats = `<div class="w-full text-center mb-[6px]">Snipers</div>`;
-      sniperStats += `<div class="w-full text-center"><table class="w-full"><tbody>`;
-      snipers.forEach(s => {
-        sniperStats += `
-          <tr class="text-[14px]">
-            <td class="text-center">${s.games}</td>
-            <td class="whitespace-nowrap">${Number(Math.round((s.wins / s.games * 100) + "e+1")  + "e-1")}% (${s.wins}<span class="text-[12px] opacity-60">W</span> - ${s.losses}<span class="text-[12px] opacity-60">L</span>)</td>
-            <td class="text-[12px] opacity-60">VS</td>
-            <td class="pl-[6px] text-left max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">${s.name}</td>
-          </tr>
-        `;
-      });
-      sniperStats += `</tbody></table></div>`;
-      document.getElementById('snipersDetails').innerHTML = sniperStats;
-    } else {
-      openedStats = '';
-      document.getElementById('snipersDetails').innerHTML = '';
-    }
-  });
-  document.getElementById('champInfo').appendChild(sniperInfoDiv);
-  
-  
-  champInfo.sort((a, b) => b.games - a.games);
-  champInfo.forEach((c, i) => {
-    c.vsCharacters.sort((a, b) => b.games - a.games);
-    let champInfoDiv = document.createElement('div');
-    champInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
-    let champIconUrl = i === 0 ? 'assets/champion.svg' : `assets/characters/character_${c.id}_l.png`;
-    let champTxt = `
-      <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
-        <img class="w-[30px] h-[30px] max-w-none" src="${champIconUrl}" alt="${c.name}" />
-      </div>
-      <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${c.games}</div>
-    `;
-    champInfoDiv.innerHTML = champTxt;
-    champInfoDiv.addEventListener('click', (e) => {
-      document.getElementById('snipersDetails').innerHTML = '';
-      if(c.name !== openedStats) {
-        openedStats = c.name;
-        let statsFormated = [
-          {key: 'Winrate', value: Number(Math.round((c.wins / c.games * 100) + "e+1")  + "e-1") + '% (' + c.wins + '<span class="text-[12px] opacity-60">W</span> - ' + c.losses + '<span class="text-[12px] opacity-60">L</span>)'},
-          {key: 'LP gained', value: c.totalLp + ' (' + (c.totalLp / c.games).toFixed(0), unit: '/game'},
-          {key: 'MR gained', value: c.totalMrLp + ' (' + (c.totalMrLp / c.games).toFixed(0), unit: '/game'},
-        ];
-        c.vsCharacters.forEach(v => statsFormated.push({key: `<img class="w-[20px] h-[20px] mr-[4px] max-w-none" src="assets/characters/character_${v.id}_l.png" alt="${v.name}" />` + v.name, value: Number(Math.round((v.wins / v.games * 100) + "e+1")  + "e-1") + '% (' + v.wins + '<span class="text-[12px] opacity-60">W</span> - ' + v.losses + '<span class="text-[12px] opacity-60">L</span>)'}));
-        let champStats = `<div class="w-full text-center mb-[6px]">${c.name}</div>`;
-        statsFormated.forEach(s => {
-          champStats += `
-            <div class="flex flex-col justify-center mb-[10px] mx-[5px] py-[6px] px-[10px] bg-[#5c5c5c26] border-[1px] border-[#5c5c5c] rounded-[8px]">
-              <div class="text-[12px] opacity-60 mb-[2px] flex items-center">${s.key}</div>
-              <div class="text-[14px] opacity-100">${s.value}${s.unit ? '<span class="text-[12px] opacity-60">' + s.unit + '</span>)' : ''}</div>
-            </div>
-          `;
-        });
-        document.getElementById('champDetails').innerHTML = champStats;
-      } else {
-        openedStats = '';
-        document.getElementById('champDetails').innerHTML = '';
-      }
-    });
-    document.getElementById('champInfo').appendChild(champInfoDiv);
-  });
-  
   refreshSessions(null);
+  
 };
 
 const refreshSessions = (summoner) => {
@@ -992,38 +1015,7 @@ const initChart = () => {
 
 
   const data = {
-    //labels: labels,
     datasets: [...userDatasets, ...tierDatasets]
-  };
-
-  const zoomOptions = {
-    limits: {
-      //x: {min: 0, max: maxLength},
-      //y: {min: 0, max: ladder[ladder.length - 1].max + 1}
-      //x: {min: 'original', max: 'original'},
-      //y: {min: 'original', max: 'original'},
-    },
-    pan: {
-      enabled: true,
-      mode: 'xy',
-      scaleMode: 'xy',
-      //onPanComplete({chart}) {
-      //  chart.update('none');
-      //}
-    },
-    zoom: {
-      wheel: {
-        enabled: true,
-      },
-      pinch: {
-        enabled: true
-      },
-      mode: 'xy',
-      scaleMode: 'xy',
-      onZoomComplete({chart}) {
-        chart.update();
-      }
-    }
   };
   
   Chart.defaults.color = 'rgb(200, 200, 200)';
@@ -1374,7 +1366,6 @@ const initChart = () => {
               tooltipEl.style.pointerEvents = 'none';
             },
           },
-          //zoom: zoomOptions,
         },
       }
   });
