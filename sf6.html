@@ -40,8 +40,10 @@
   <link href="css/eloGraphTW.css" rel="stylesheet">
 	<title>Sardflix</title>
 </head>
-
 <body class="m-0 bg-[#282828] text-[#c8c8c8] font-['Roboto'] leading-tight">
+  <div id="modal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-30 justify-center items-center">
+    <div id="window" class="flex justify-center items-center p-[20px] rounded-[6px] bg-[#282828]"></div>
+  </div>
 	<div id="container" class="flex flex-nowrap w-full h-full">
     <div class="grow h-screen">
       <canvas id="eloGraph" class="w-full h-full fixed"></canvas>
