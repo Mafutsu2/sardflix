@@ -8,14 +8,16 @@ const colors = {
   gold: '#D8B65F',
   platinum: '#70C1C5',
   diamond: '#BC6FA8',
-  master: '#51E1A6',//#9D48E0
-  grandmaster: '#CD4545',//#756572
-  challenger: '#F4C874',//#3FBFDD
+  master: '#51E1A6',
+  highmaster: '#25AEDD',
+  grandmaster: '#FBE31F',
+  ultimatemaster: '#FF3480',
+  legend: '#F15713',
   opacityBackground: '26',
   opacityText: 'ff',
   opacityGrid: '40',
 };
-const textColorsForRetardedTailwind = {
+const textColors = {
   rookie: 'text-[#FFFFFF]',
   iron: 'text-[#7A7977]',
   bronze: 'text-[#916C4F]',
@@ -23,11 +25,11 @@ const textColorsForRetardedTailwind = {
   gold: 'text-[#D8B65F]',
   platinum: 'text-[#70C1C5]',
   diamond: 'text-[#BC6FA8]',
-  master: 'text-[#51E1A6]',//#9D48E0
-  highmaster: 'text-[#CD4545]',//#756572
-  grandmaster: 'text-[#F4C874]',//#3FBFDD
-  ultimatemaster: 'text-[#F4C874]',//#3FBFDD
-  legend: 'text-[#F4C874]',//#3FBFDD
+  master: 'text-[#51E1A6]',
+  highmaster: 'text-[#25AEDD]',
+  grandmaster: 'text-[#FBE31F]',
+  ultimatemaster: 'text-[#FF3480]',
+  legend: 'text-[#F15713]',
   'undefined': '',
 };
 const curvesColors = [
@@ -46,7 +48,7 @@ const curvesColors = [
   {name: 'teal', colorLight: '#57ebd2', colorDark: '#4d877d', colorHover: '#b0f5e9'},
   {name: 'pink', colorLight: '#eb57df', colorDark: '#804b7b', colorHover: '#f5a9ef'},
 ];
-const tiers = [
+const tiersColor = [
   {name: "Rookie", color: colors.rookie + colors.opacityBackground, colorText: colors.rookie + colors.opacityText, colorGrid: colors.rookie + colors.opacityGrid},
   {name: "Iron", color: colors.iron + colors.opacityBackground, colorText: colors.iron + colors.opacityText, colorGrid: colors.iron + colors.opacityGrid},
   {name: "Bronze", color: colors.bronze + colors.opacityBackground, colorText: colors.bronze + colors.opacityText, colorGrid: colors.bronze + colors.opacityGrid},
@@ -54,11 +56,28 @@ const tiers = [
   {name: "Gold", color: colors.gold + colors.opacityBackground, colorText: colors.gold + colors.opacityText, colorGrid: colors.gold + colors.opacityGrid},
   {name: "Platinum", color: colors.platinum + colors.opacityBackground, colorText: colors.platinum + colors.opacityText, colorGrid: colors.platinum + colors.opacityGrid},
   {name: "Diamond", color: colors.diamond + colors.opacityBackground, colorText: colors.diamond + colors.opacityText, colorGrid: colors.diamond + colors.opacityGrid},
-  {name: "Master", color: colors.highmaster + colors.opacityBackground, color2: colors.master + colors.opacityBackground, colorText: colors.master + colors.opacityText, colorGrid: colors.master + colors.opacityGrid}, //color=gm color2=master
-  {name: "High Master", color: colors.grandmaster + colors.opacityBackground, color2: colors.highmaster + colors.opacityBackground, colorText: colors.highmaster + colors.opacityText, colorGrid: colors.highmaster + colors.opacityGrid},
-  {name: "Grand Master", color: colors.ultimatemaster + colors.opacityBackground, color2: colors.grandmaster + colors.opacityBackground, colorText: colors.grandmaster + colors.opacityText, colorGrid: colors.grandmaster + colors.opacityGrid},
-  {name: "Ultimate Master", color: colors.legend + colors.opacityBackground, color2: colors.ultimatemaster + colors.opacityBackground, colorText: colors.ultimatemaster + colors.opacityText, colorGrid: colors.ultimatemaster + colors.opacityGrid},
-  {name: "Legend", color: colors.legend + colors.opacityBackground, color2: colors.legend + colors.opacityBackground, colorText: colors.legend + colors.opacityText, colorGrid: colors.legend + colors.opacityGrid},
+  {name: "Master", color: colors.master + colors.opacityBackground, colorText: colors.master + colors.opacityText, colorGrid: colors.master + colors.opacityGrid},
+  {name: "High Master", color: colors.highmaster + colors.opacityBackground, colorText: colors.highmaster + colors.opacityText, colorGrid: colors.highmaster + colors.opacityGrid},
+  {name: "Grand Master", color: colors.grandmaster + colors.opacityBackground, colorText: colors.grandmaster + colors.opacityText, colorGrid: colors.grandmaster + colors.opacityGrid},
+  {name: "Ultimate Master", color: colors.ultimatemaster + colors.opacityBackground, colorText: colors.ultimatemaster + colors.opacityText, colorGrid: colors.ultimatemaster + colors.opacityGrid},
+  {name: "Legend", color: colors.legend + colors.opacityBackground, colorText: colors.legend + colors.opacityText, colorGrid: colors.legend + colors.opacityGrid},
+];
+const tiers = [
+  {tier: 'Rookie', symbol: 'R', min: 0, step: 200},
+  {tier: 'Iron', symbol: 'I', min: 1000, step: 400},
+  {tier: 'Bronze', symbol: 'B', min: 3000, step: 400},
+  {tier: 'Silver', symbol: 'S', min: 5000, step: 800},
+  {tier: 'Gold', symbol: 'G', min: 9000, step: 800},
+  {tier: 'Platinum', symbol: 'P', min: 13000, step: 1200},
+  {tier: 'Diamond', symbol: 'D', min: 19000, step: 1200},
+  {tier: 'Master', symbol: 'M', min: 25000, step: 0},
+];
+const masterTiers = [
+  {tier: 'Master', symbol: 'M', min: 1500, step: 0},
+  {tier: 'High Master', symbol: 'M', min: 1600, step: 0},
+  {tier: 'Grand Master', symbol: 'M', min: 1700, step: 0},
+  {tier: 'Ultimate Master', symbol: 'M', min: 1800, step: 0},
+  {tier: 'Legend', symbol: 'M', min: 2100, step: 0},
 ];
 
 const isApexTier = (name) => ["Master", "High Master", "Grand Master", "Ultimate Master", "Legend"].includes(name);
@@ -141,6 +160,12 @@ window.onload = () => {
   document.getElementById('searchVsFighter').addEventListener('keypress', (e) => {
     if(e.keyCode === 13)
       showVsFighter();
+  });
+  
+  document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());
+  document.getElementById('modal').addEventListener('click', () => {
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('modal').classList.remove('flex');
   });
 };
 
@@ -226,13 +251,26 @@ const changeMinX = () => {
 };
 
 const getApexTiers = async() => {
+  tiers.forEach((t, index) => {
+    const tierColor = tiersColor.find(c => c.name === t.tier);
+    if(t.tier != 'Master') {
+      for(let i = 0; i < 5; i++) {
+        let min = t.min + (i * t.step);
+        ladder.push({id: (index * 5) + (i + 1), tier: t.tier, symbol: t.symbol, division: (i + 1) + '', min, max: min + t.step, color: tierColor.color, colorText: tierColor.colorText, colorGrid: tierColor.colorGrid});
+      }
+    } else {
+      ladder.push({id: (index * 5) + 1, tier: t.tier, symbol: t.symbol, division: '', min: t.min, color: tierColor.color, colorText: tierColor.colorText, colorGrid: tierColor.colorGrid});
+    }
+  });
+  ladderMaster.forEach((l, index) => {
+    const tierColor = tiersColor.find(c => c.name === l.tier);
+    l.max = ladderMaster[index + 1]?.min;
+    l.color = tierColor.color;
+    l.colorText = tierColor.colorText;
+    l.colorGrid = tierColor.colorGrid;
+  });
+  
   ladder.forEach((l, i) => {
-    l.max = ladder[i + 1]?.min;
-    const tier = tiers.find(t => t.name === l.tier);
-    l.color = tier.color;
-    l.colorText = tier.colorText;
-    colorGrid = tier.colorGrid;
-    
     yTicks.push({value: l.min});
     if(l.tier === 'Platinum' || l.tier === 'Diamond')
       yTicks.push({value: l.min + 600});
@@ -266,44 +304,7 @@ const init = () => {
   summonersInfo = {};
   uniqueCounter = 0;
   ladderCounter = 0;
-  ladder = [
-    {id: 1, tier: 'Rookie', symbol: 'R', division: '1', min: 0},
-    {id: 2, tier: 'Rookie', symbol: 'R', division: '2', min: 200},
-    {id: 3, tier: 'Rookie', symbol: 'R', division: '3', min: 400},
-    {id: 4, tier: 'Rookie', symbol: 'R', division: '4', min: 600},
-    {id: 5, tier: 'Rookie', symbol: 'R', division: '5', min: 800},
-    {id: 6, tier: 'Iron', symbol: 'I', division: '1', min: 1000},
-    {id: 7, tier: 'Iron', symbol: 'I', division: '2', min: 1400},
-    {id: 8, tier: 'Iron', symbol: 'I', division: '3', min: 1800},
-    {id: 9, tier: 'Iron', symbol: 'I', division: '4', min: 2200},
-    {id: 10, tier: 'Iron', symbol: 'I', division: '5', min: 2600},
-    {id: 11, tier: 'Bronze', symbol: 'B', division: '1', min: 3000},
-    {id: 12, tier: 'Bronze', symbol: 'B', division: '2', min: 3400},
-    {id: 13, tier: 'Bronze', symbol: 'B', division: '3', min: 3800},
-    {id: 14, tier: 'Bronze', symbol: 'B', division: '4', min: 4200},
-    {id: 15, tier: 'Bronze', symbol: 'B', division: '5', min: 4600},
-    {id: 16, tier: 'Silver', symbol: 'S', division: '1', min: 5000},
-    {id: 17, tier: 'Silver', symbol: 'S', division: '2', min: 5800},
-    {id: 18, tier: 'Silver', symbol: 'S', division: '3', min: 6600},
-    {id: 19, tier: 'Silver', symbol: 'S', division: '4', min: 7400},
-    {id: 20, tier: 'Silver', symbol: 'S', division: '5', min: 8200},
-    {id: 21, tier: 'Gold', symbol: 'G', division: '1', min: 9000},
-    {id: 22, tier: 'Gold', symbol: 'G', division: '2', min: 9800},
-    {id: 23, tier: 'Gold', symbol: 'G', division: '3', min: 10600},
-    {id: 24, tier: 'Gold', symbol: 'G', division: '4', min: 11400},
-    {id: 25, tier: 'Gold', symbol: 'G', division: '5', min: 12200},
-    {id: 26, tier: 'Platinum', symbol: 'P', division: '1', min: 13000},
-    {id: 27, tier: 'Platinum', symbol: 'P', division: '2', min: 14200},
-    {id: 28, tier: 'Platinum', symbol: 'P', division: '3', min: 15400},
-    {id: 29, tier: 'Platinum', symbol: 'P', division: '4', min: 16600},
-    {id: 30, tier: 'Platinum', symbol: 'P', division: '5', min: 17800},
-    {id: 31, tier: 'Diamond', symbol: 'D', division: '1', min: 19000},
-    {id: 32, tier: 'Diamond', symbol: 'D', division: '2', min: 20200},
-    {id: 33, tier: 'Diamond', symbol: 'D', division: '3', min: 21400},
-    {id: 34, tier: 'Diamond', symbol: 'D', division: '4', min: 22600},
-    {id: 35, tier: 'Diamond', symbol: 'D', division: '5', min: 23800},
-    {id: 36, tier: 'Master', symbol: 'M', division: '', min: 25000},
-  ];
+  ladder = [];
   ladderMaster = [
     {id: 36, tier: 'Master', symbol: 'M', min: 1500},
     {id: 40, tier: 'High Master', symbol: 'HM', min: 1600},
@@ -353,16 +354,92 @@ const start = async() => {
   }
 };
 
-const updateTimer = (gameId, startTimestamp) => {
-  let seconds = Math.floor(((new Date()).getTime() - startTimestamp) / 1000);
-  let minutes = Math.floor(seconds / 60);
-  let sec = seconds % 60;
-  let element = document.getElementById('current_' + gameId);
-  if(element)
-    element.textContent = `~ ${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+const createRanksDiv = (start, end, isMaster, parentDiv) => {
+  let points = 'LP';
+  let ladderArray = ladder;
+  let tiersArray = tiers;
+  if(isMaster) {
+    points = 'MR';
+    ladderArray = ladderMaster;
+    tiersArray = masterTiers;
+  }
+  
+  for(let i = start; i < end; i++) {
+    const tierColor = tiersColor.find(t => t.name === tiersArray[i].tier);
+    
+    const tierDiv = document.createElement('div');
+    tierDiv.className = 'flex justify-center items-center';
+    let divisionsDiv = '';
+    ladderArray.forEach(l => {
+      if(l.tier === tiersArray[i].tier) {
+        divisionsDiv += `
+          <div class="flex justify-center items-center">
+            <img src="assets/ranks/rank${l.id}_s.png" alt="${l.tier} ${l.division}" class="w-[100px]" />
+            <div class="w-[100px] mt-[12px] text-center" style="color: ${tierColor.colorText}">${l.tier === 'Legend' ? 'Top 500' : l.min + ' ' + points}</div>
+          </div>
+        `;
+      }
+    });
+    tierDiv.innerHTML = `
+      <div class="flex flex-col justify-center items-center m-[10px] p-[10px] rounded-[6px]" style="background-color: ${tierColor.color}">
+        ${divisionsDiv}
+      </div>
+    `;
+    parentDiv.appendChild(tierDiv);
+  }
+};
+
+const createRanksInfo = () => {
+  const infoContainer = document.getElementById('window');
+  infoContainer.innerText = '';
+  const lpDiv = document.createElement('div');
+  lpDiv.className = 'flex flex-col';
+  infoContainer.appendChild(lpDiv);
+  
+  const lpTitleDiv = document.createElement('div');
+  lpTitleDiv.className = 'flex justify-center m-[20px] text-[18px]';
+  lpTitleDiv.innerText = 'League Point';
+  lpDiv.appendChild(lpTitleDiv);
+  
+  const lpRankDiv = document.createElement('div');
+  lpRankDiv.className = 'flex flex-col';
+  lpDiv.appendChild(lpRankDiv);
+  
+  const lpRankDiv1 = document.createElement('div');
+  lpRankDiv1.className = 'flex flex-wrap items-start';
+  lpRankDiv.appendChild(lpRankDiv1);
+  createRanksDiv(0, 4, false, lpRankDiv1);
+  const lpRankDiv2 = document.createElement('div');
+  lpRankDiv2.className = 'flex flex-wrap items-start';
+  lpRankDiv.appendChild(lpRankDiv2);
+  createRanksDiv(4, tiers.length, false, lpRankDiv2);
+  
+  const mrDiv = document.createElement('div');
+  mrDiv.className = 'flex flex-col';
+  infoContainer.appendChild(mrDiv);
+  
+  const mrTitleDiv = document.createElement('div');
+  mrTitleDiv.className = 'flex justify-center m-[20px] text-[18px]';
+  mrTitleDiv.innerText = 'Master Rating';
+  mrDiv.appendChild(mrTitleDiv);
+  
+  const mrRankDiv = document.createElement('div');
+  mrRankDiv.className = 'flex flex-col';
+  mrDiv.appendChild(mrRankDiv);
+  createRanksDiv(0, ladderMaster.length, true, mrRankDiv);
+  
+  const modal = document.getElementById('modal');
+  document.getElementById('modal').classList.add('flex');
+  document.getElementById('modal').classList.remove('hidden');
 };
 
 const initCards = async(allData) => {
+  let infoDiv = document.createElement('div');
+  infoDiv.className = 'flex items-center justify-center mr-[8px] w-[25px] h-[25px] text-[17px] rounded-[15px] bg-[#3c3c3c] cursor-pointer';
+  infoDiv.innerHTML = '&#x24D8;';
+  infoDiv.addEventListener('click', (e) => createRanksInfo());
+  document.getElementById('champInfo').appendChild(infoDiv);
+  
   snipers.sort((a, b) => b.games - a.games || a.wins - b.wins);
   let sniperInfoDiv = document.createElement('div');
   sniperInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
@@ -511,8 +588,8 @@ const initCards = async(allData) => {
         <span class="tooltipPopupCharacterText">${d.vsCharacter}</span>
       </div>
     `;
-    let twTierColor = textColorsForRetardedTailwind[d.newTier?.toLowerCase()];
-    let twVsTierColor = textColorsForRetardedTailwind[d.vsTier?.toLowerCase()];
+    let twTierColor = textColors[d.newTier?.toLowerCase()];
+    let twVsTierColor = textColors[d.vsTier?.toLowerCase()];
     let lp = `
       <span class="text-[10px] mr-[2px] ${twTierColor}">${d.newSymbol ? d.newSymbol : ''}${d.newDivision ? d.newDivision : ''}</span>
       <span class="mr-[2px] ${twTierColor}">${d.newLp ? d.newLp : '?'}</span>
@@ -1191,7 +1268,7 @@ const initChart = () => {
                 labels.forEach(label => label.datasetIndex < userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
                 return labels;
               },
-              filter: (item, chartData) => !tiers.some(t => t.name === item.text),
+              filter: (item, chartData) => !tiersColor.some(t => t.name === item.text),
               sort: (a, b, chartData) =>  chartData.datasets.find(d => d.label === a.text).defaultOrder - chartData.datasets.find(d => d.label === b.text).defaultOrder,
               usePointStyle: true,
               pointStyle: 'rectRounded'
@@ -1325,7 +1402,7 @@ const initChart = () => {
                 }
                 
                 let displayedLp = `
-                  <div class="mr-[20px] ${textColorsForRetardedTailwind[tooltipTier?.toLowerCase()]}"><span>${tooltipSymbol || ''}${tooltipDivision || ''}</span> ${tooltipLp || '?'} LP</div>
+                  <div class="mr-[20px] ${textColors[tooltipTier?.toLowerCase()]}"><span>${tooltipSymbol || ''}${tooltipDivision || ''}</span> ${tooltipLp || '?'} LP</div>
                 `;
                 let displayChampion = `
                   <img class="h-[20px] max-w-none" src="assets/characters/character_${tooltipChampionId}_l.png" alt="${tooltipChampion}" />
@@ -1333,7 +1410,7 @@ const initChart = () => {
                 `;
                 
                 let displayedVsLp = `
-                  <div class="mr-[20px] ${textColorsForRetardedTailwind[tooltipVsTier?.toLowerCase()]}"><span>${tooltipVsSymbol || ''}${tooltipVsDivision || ''}</span> ${tooltipVsLp || '?'} LP</div>
+                  <div class="mr-[20px] ${textColors[tooltipVsTier?.toLowerCase()]}"><span>${tooltipVsSymbol || ''}${tooltipVsDivision || ''}</span> ${tooltipVsLp || '?'} LP</div>
                 `;
                 let displayVsChampion = `
                   <img class="h-[20px] max-w-none" src="assets/characters/character_${tooltipVsChampionId}_r.png" alt="${tooltipVsChampion}" />

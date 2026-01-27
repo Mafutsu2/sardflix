@@ -6,7 +6,6 @@ let clipId;
 
 window.onload = async() => {
   loadFavicon();
-  document.getElementById('window').addEventListener('click', (e) => e.stopPropagation());
   document.getElementById('discord').addEventListener('click', () => {
     const token = localStorage.getItem('sardflix-token');
     if(token !== null && token !== '')
