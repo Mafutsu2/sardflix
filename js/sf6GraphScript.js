@@ -336,6 +336,9 @@ const getMatches = async(season) => {
     const allMatches = await response.json();
     matches = Array.isArray(allMatches) ? allMatches : allMatches.matches;
     lp = allMatches?.lp;
+    const threshold = allMatches?.thresholds?.legend;
+    ladderMaster[ladderMaster.length - 1].min = threshold?.mr;
+    ladderMaster[ladderMaster.length - 1].timestamp = threshold?.timestamp;
     start();
   }
 };
@@ -372,12 +375,28 @@ const createRanksDiv = (start, end, isMaster, parentDiv) => {
     let divisionsDiv = '';
     ladderArray.forEach(l => {
       if(l.tier === tiersArray[i].tier) {
-        divisionsDiv += `
-          <div class="flex justify-center items-center">
-            <img src="assets/ranks/rank${l.id}_s.png" alt="${l.tier} ${l.division}" class="w-[100px]" />
-            <div class="w-[100px] mt-[12px] text-center" style="color: ${tierColor.colorText}">${l.tier === 'Legend' ? 'Top 500' : l.min + ' ' + points}</div>
-          </div>
-        `;
+        if(l.tier !== 'Legend') {
+          divisionsDiv += `
+            <div class="flex justify-center items-center">
+              <img src="assets/ranks/rank${l.id}_s.png" alt="${l.tier} ${l.division}" class="w-[100px]" />
+              <div class="w-[100px] mt-[12px] text-center" style="color: ${tierColor.colorText}">${l.min + ' ' + points}</div>
+            </div>
+          `;
+        } else {
+          const seconds = Math.floor(((new Date())-l.timestamp)/1000);
+          divisionsDiv += `
+            <div class="flex flex-col justify-center items-center">
+              <div class="flex justify-center items-center">
+                <img src="assets/ranks/rank${l.id}_s.png" alt="${l.tier}" class="w-[100px]" />
+                <div class="flex flex-col justify-center items-center">
+                  <div class="w-[100px] mt-[12px] text-center" style="color: ${tierColor.colorText}">${l.min + ' ' + points}</div>
+                  <div class="w-[100px] text-[12px] text-center" style="color: ${tierColor.colorText}">(Top 500)</div>
+                </div>
+              </div>
+              <div class="mt-[6px] mb-[4px] text-[12px] text-center">${seconds}s ago</div>
+            </div>
+          `;
+        }
       }
     });
     tierDiv.innerHTML = `
