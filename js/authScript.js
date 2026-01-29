@@ -11,7 +11,7 @@ const getCode = () => {
   if(!code) {
     const randomString = generateRandomString();
     localStorage.setItem('oauth-state', randomString);
-    window.location.href = 'https://discord.com/oauth2/authorize?client_id=1231396468850561094&response_type=code&redirect_uri=https%3A%2F%2Fwww.sardflix.com%2Fauth&scope=identify&state=' + btoa(randomString);
+    window.location.href = 'https://discord.com/oauth2/authorize?client_id=1231396468850561094&response_type=code&redirect_uri=https%3A%2F%2Fsardflix.com%2Fauth.html&scope=identify&state=' + btoa(randomString);
   } else if (localStorage.getItem('oauth-state') !== atob(decodeURIComponent(params.get('state')))) {
     document.getElementById('authIcon').innerHTML = '';
     document.getElementById('authName').innerText = 'Connexion aborted because you may have been clickjacked! - redirecting in 2s';
@@ -39,7 +39,7 @@ const connect = async() => {
     document.getElementById('authMesaage').innerText = 'Connexion successful! - redirecting in 1s';
   } else {
     localStorage.setItem('sardflix-token', '');
-    document.getElementById('authIcon').innerHTML = '';
+    document.getElementById('authAvatar').innerHTML = '';
     document.getElementById('authName').innerText = 'Connexion failed! - redirecting in 1s';
   }
   setTimeout(() => {
