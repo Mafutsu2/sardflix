@@ -95,7 +95,7 @@ let champInfo = [];
 let maxLength = 1;
 let openedStats = '';
 let yTicks = [];
-
+let xTicksStep = 1;
 let summonersInfo = {};
 let ladder = [];
 let ladderMaster = [];
@@ -107,6 +107,7 @@ let maxX = 0;
 let staticMaxX = 0;
 let masterY = 0;
 let isApexReady = false;
+let numberOfUpdates = 0;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -247,7 +248,21 @@ const changeMinX = () => {
   minY = newMinY;
   maxY = newMaxY;
   
+  setTicksStep(newMaxX);
+  stackedLine.options.scales.x.ticks.stepSize = xTicksStep;
+  
   stackedLine.update();
+};
+
+const setTicksStep = (max) => {
+  //step sizes will be [200 , 100 , 50  , 10 , 5  , 1]
+  let stepSizesRatio = [6000, 3000, 1500, 300, 150, 30];
+  stepSizesRatio.some(s => {
+    if(max >= s) {
+      xTicksStep = Math.floor(s/30);
+      return true;
+    }
+  });
 };
 
 const getApexTiers = async() => {
@@ -713,25 +728,15 @@ const initCards = async(allData) => {
           dataset.type = 'line';
         }
       });
-      stackedLine.update();
+      updateGraphIfNoOtherRequest();
     });
     newEl.addEventListener('mouseleave', event => {
       newEl.classList.remove(hoverClassName);
       userDatasets.forEach(dataset => {
-        dataset.segment.borderColor = (ctx) => {
-          if(ctx.p1.raw.replayId === d.replayId)
-            return ctx.p1.raw.colorHover;
-          else
-            return ctx.p1.raw.color;
-        };
-        dataset.pointBackgroundColor = dataset.data.map(data => {
-          if(data.replayId === d.replayId)
-            return data.colorHover;
-          else
-            return data.color;
-        });
+        dataset.segment.borderColor = (ctx) => ctx.p1.raw.color;
+        dataset.pointBackgroundColor = dataset.data.map(data => data.color);
       });
-      stackedLine.update();
+      updateGraphIfNoOtherRequest();
     });
     
     if(index > initialLoad)
@@ -747,7 +752,7 @@ const initCards = async(allData) => {
   //force rendering of fragment2 separatly
   setTimeout(() => {
     gameCards.appendChild(fragment2);
-  }, 0);
+  }, 100);
   
   gameCards.addEventListener('mouseleave', event => {
     userDatasets.forEach(dataset => {
@@ -756,11 +761,20 @@ const initCards = async(allData) => {
         dataset.type = 'line';
       }
     });
-    stackedLine.update();
+    updateGraphIfNoOtherRequest();
   });
   
   refreshSessions(null);
-  
+};
+
+const updateGraphIfNoOtherRequest = () => {
+  numberOfUpdates++;
+  const currentUpdateNb = numberOfUpdates;
+  setTimeout(() => {
+    if(numberOfUpdates === currentUpdateNb){
+      stackedLine.update();
+    }
+  }, 30);
 };
 
 const refreshSessions = (summoner) => {
@@ -1058,6 +1072,7 @@ const formatData2 = (allData) => {
   staticMaxX = maxX;
   minY = Math.floor((minY - 100) / 100) * 100;
   maxY = Math.ceil((maxY + 100) / 100) * 100;
+  setTicksStep(maxX);
   return newUserDatasets;
 };
 
@@ -1172,11 +1187,11 @@ const initChart = () => {
             max: maxX + 1,
             ticks: {
               offset: true,
-              stepSize: 1,
+              stepSize: xTicksStep,
               autoSkip: true,
               includeBounds: false,
               callback: function(value, index, ticks) {
-                if(value % 5 === 0 || value === maxLength - 1) {
+                if(value % xTicksStep === 0) {
                   return value;
                 }
               },
@@ -1325,10 +1340,12 @@ const initChart = () => {
               maxX = Math.max(...visibleData.map(item => item[1].nbGame));
               minY = Math.floor((minY - 100) / 100) * 100;
               maxY = Math.ceil((maxY + 100) / 100) * 100;
+              setTicksStep(maxX);
 
               stackedLine.options.scales.y.min= minY;
               stackedLine.options.scales.y.max = maxY;
               stackedLine.options.scales.x.max = maxX + 1;
+              stackedLine.options.scales.x.ticks.stepSize = xTicksStep;
               stackedLine.update();
 
               allData.forEach(d => {
