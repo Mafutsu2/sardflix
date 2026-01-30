@@ -797,19 +797,31 @@ const refreshSessions = (summoner) => {
 const setSessionDiv = (session) => {
   let wins = 0;
   let losses = 0;
+  let lp = 0;
+  let mr = 0;
   for(let key in session.details) {
     if(session.notHiddenSummoners.includes(key)) {
       wins += session.details[key].wins;
       losses += session.details[key].losses;
+      lp += session.details[key].lpGained;
+      mr += session.details[key].mrGained;
     }
   }
+  
+  let lpSign = lp >= 0 ? '+' : '&minus;';
+  let mrSign = mr >= 0 ? '+' : '&minus;';
   session.element.children[0].innerHTML = `
-    <div class="inline-flex items-center">
+    <div class="inline-flex items-center text-[16px]">
       <span>SESSION: ${wins}</span>
-      <span class="my-0 mx-[1px] text-[16px] font-normal opacity-40">/</span>
+      <span class="my-0 mx-[1px] text-[14px] font-normal opacity-40">/</span>
       <span>${losses}</span>
-      <span class="my-0 mx-[6px] text-[16px] font-normal opacity-40">&mdash;</span>
-      <span>${(wins / (wins + losses) * 100).toFixed(1)}%</span>
+      <span class="my-0 mx-[8px] text-[14px] font-normal opacity-40">&mdash;</span>
+      <span>${(wins / (wins + losses) * 100).toFixed(1)}</span>
+      <span class="my-0 ml-[2px] text-[14px] font-normal opacity-80">%</span>
+      <span class="my-0 mx-[8px] text-[14px] font-normal opacity-40">&mdash;</span>
+      <span class="my-0 text-[14px] font-normal">${mr === 0 ? lpSign : mrSign}</span>
+      <span class="ml-[2px]">${Math.abs(mr === 0 ? lp : mr)}</span>
+      <span class="my-0 ml-[4px] text-[14px] font-normal opacity-80">${mr === 0 ? 'LP' : 'MR'}</span>
     </div>
   `;
 };
@@ -937,12 +949,16 @@ const formatData1 = () => {
         session.details[d.character] = {
           wins: 0,
           losses: 0,
+          lpGained: 0,
+          mrGained: 0,
         };
         session.summoners.push(d.character);
       }
       
       session.details[d.character].wins += d.outcome === 1 ? 1 : 0;
       session.details[d.character].losses += d.outcome === 0 ? 1 : 0;
+      session.details[d.character].lpGained += d.lpDiff;
+      session.details[d.character].mrGained += d.mrLpDiff;
     }
   });
   return allData;
