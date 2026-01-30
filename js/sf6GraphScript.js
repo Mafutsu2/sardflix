@@ -77,8 +77,18 @@ const masterTiers = [
   {tier: 'High Master', symbol: 'M', min: 1600, step: 0},
   {tier: 'Grand Master', symbol: 'M', min: 1700, step: 0},
   {tier: 'Ultimate Master', symbol: 'M', min: 1800, step: 0},
-  {tier: 'Legend', symbol: 'M', min: 2100, step: 0},
+  {tier: 'Legend', symbol: 'M', min: 2200, step: 0},
 ];
+const rankMap = {
+  1: 1,  2: 1,  3: 1,  4: 1,  5: 1,
+  6: 6,  7: 6,  8: 6,  9: 6,  10: 6,
+  11: 11, 12: 11, 13: 11, 14: 11, 15: 11,
+  16: 16, 17: 16, 18: 16, 19: 16, 20: 16,
+  21: 21, 22: 21, 23: 21, 24: 21, 25: 21,
+  26: 26, 27: 26, 28: 26, 29: 26, 30: 26,
+  31: 31, 32: 31, 33: 31, 34: 31, 35: 31,
+  36: 36, 37: 37, 40: 40, 41: 41, 42: 42
+};
 
 const isApexTier = (name) => ["Master", "High Master", "Grand Master", "Ultimate Master", "Legend"].includes(name);
 const divisions = ["I", "II", "III", "IV", "V"];
@@ -311,6 +321,7 @@ const init = () => {
     losses: 0,
     totalLp: 0,
     totalMrLp: 0,
+    tiers: [],
     vsCharacters: [],
   }];
   maxLength = 1;
@@ -513,6 +524,11 @@ const initCards = async(allData) => {
   champInfo.sort((a, b) => b.games - a.games);
   champInfo.forEach((c, i) => {
     c.vsCharacters.sort((a, b) => b.games - a.games);
+    c.tiers.sort((a, b) => {
+      if(a.id === 37 && b.id !== 37) return -1
+      else if(a.id !== 37 && b.id === 37) return 1;
+      else return b.id - a.id;
+    });
     let champInfoDiv = document.createElement('div');
     champInfoDiv.className = 'flex items-center mr-[8px] text-[14px] rounded-[6px] bg-[#3c3c3c] cursor-pointer';
     let champIconUrl = i === 0 ? 'assets/champion.svg' : `assets/characters/character_${c.id}_l.png`;
@@ -532,6 +548,7 @@ const initCards = async(allData) => {
           {key: 'LP gained', value: c.totalLp + ' (' + (c.totalLp / c.games).toFixed(0), unit: '/game'},
           {key: 'MR gained', value: c.totalMrLp + ' (' + (c.totalMrLp / c.games).toFixed(0), unit: '/game'},
         ];
+        c.tiers.forEach(v => statsFormated.push({key: `<img class="h-[18px] mb-[2px] max-w-none" src="assets/ranks/rank_${v.id}.png" alt="rank ${v.id}" />`, value: v.games + '<span class="ml-[2px] text-[12px] opacity-60">games</span>'}));
         c.vsCharacters.forEach(v => statsFormated.push({key: `<img class="w-[20px] h-[20px] mr-[4px] max-w-none" src="assets/characters/character_${v.id}_l.png" alt="${v.name}" />` + v.name, value: Number(Math.round((v.wins / v.games * 100) + "e+1")  + "e-1") + '% (' + v.wins + '<span class="text-[12px] opacity-60">W</span> - ' + v.losses + '<span class="text-[12px] opacity-60">L</span>)'}));
         let champStats = `<div class="w-full text-center mb-[6px]">${c.name}</div>`;
         statsFormated.forEach(s => {
@@ -862,6 +879,7 @@ const formatData1 = () => {
       newLp: nextGame.league_point,
       placementLp: nextGame.league_point === -1 ? findNextGame(g, i, 'lp')?.league_point : null,
       lpDiff: lpDiff,
+      tier: g.league_rank,
       newTier: newTier?.tier,
       newDivision: newTier?.division,
       newSymbol: newTier?.symbol,
@@ -894,24 +912,23 @@ const formatData1 = () => {
     });
     
     //champions stats
-    if(g.is_victory <= 1) {
-      let cInfo = champInfo.find(c => c.id === g.character_id);
-      if(!cInfo) {
-        let cIndex = champInfo.push({
-          id: g.character_id,
-          name: g.character,
-          games: 0,
-          wins: 0,
-          losses: 0,
-          totalLp: 0,
-          totalMrLp: 0,
-          vsCharacters: [],
-        });
-        cInfo = champInfo[cIndex - 1];
-      }
-      addDataToCInfo(champInfo[0], g, lpDiff, mrLpDiff);
-      addDataToCInfo(cInfo, g, lpDiff, mrLpDiff);
+    let cInfo = champInfo.find(c => c.id === g.character_id);
+    if(!cInfo) {
+      let cIndex = champInfo.push({
+        id: g.character_id,
+        name: g.character,
+        games: 0,
+        wins: 0,
+        losses: 0,
+        totalLp: 0,
+        totalMrLp: 0,
+        tiers: [],
+        vsCharacters: [],
+      });
+      cInfo = champInfo[cIndex - 1];
     }
+    addDataToCInfo(champInfo[0], g, lpDiff, mrLpDiff);
+    addDataToCInfo(cInfo, g, lpDiff, mrLpDiff);
     
     sessionCounter += (matches[i + 1] && matches[i + 1].timestamp > g.timestamp + 14400) ? 1 : 0;//4 hours
   });
@@ -976,15 +993,33 @@ const addDataToCInfo = (cInfo, g, lpDiff, mrLpDiff) => {
     });
     vsCharacter = cInfo.vsCharacters[characterCount - 1];
   }
-    
-  cInfo.games += 1;
-  vsCharacter.games += 1;
-  if(g.is_victory) {
+  
+  if(g.league_point !== -1 || g.master_rating !== 0) {
+    let tier;
+    if(g.master_rank)
+      tier = cInfo.tiers.find(c => c.id === g.master_rank);
+    else
+      tier = cInfo.tiers.find(c => c.id === rankMap[g.league_rank]);
+    if(!tier) {
+      let tierCount = cInfo.tiers.push({
+        id: g.master_rank ? g.master_rank : rankMap[g.league_rank],
+        games: 0,
+      });
+      tier = cInfo.tiers[tierCount - 1];
+    }
+    tier.games += 1;
+  }
+  
+  if(g.is_victory === 1) {
     cInfo.wins += 1;
     vsCharacter.wins += 1;
-  } else {
+    cInfo.games += 1;
+    vsCharacter.games += 1;
+  } else if(g.is_victory === 0) {
     cInfo.losses += 1;
     vsCharacter.losses += 1;
+    cInfo.games += 1;
+    vsCharacter.games += 1;
   }
   cInfo.totalLp += lpDiff;
   cInfo.totalMrLp += mrLpDiff;
