@@ -210,12 +210,16 @@ const showVsFighter = () => {
   
   searchPlayerSession.details.fighter.wins = 0;
   searchPlayerSession.details.fighter.losses = 0;
+  searchPlayerSession.details.fighter.lpGained = 0;
+  searchPlayerSession.details.fighter.mrGained = 0;
   allData.forEach(d => {
     if(d.vsFighter.toLowerCase().includes(fighterName)) {
       if(d.outcome === 1)
         searchPlayerSession.details.fighter.wins += 1;
       else if(d.outcome === 0)
         searchPlayerSession.details.fighter.losses += 1;
+      searchPlayerSession.details.fighter.lpGained += d.lpDiff;
+      searchPlayerSession.details.fighter.mrGained += d.mrLpDiff;
       d.element.classList.remove('!hidden');
       d.element.classList.add('!flex');
       searchPlayerSession.isHidden = false;
