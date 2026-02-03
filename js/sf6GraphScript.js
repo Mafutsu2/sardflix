@@ -1,4 +1,9 @@
 //tailwindcss-windows-x64.exe -i css/eloGraph.css -o css/eloGraphTW.css --minify
+/*
+modifications pour plusieurs graphics
+rassembler les variables utilise par objets
+
+*/
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const colors = {
   rookie: '#FFFFFF',
@@ -118,6 +123,8 @@ let staticMaxX = 0;
 let masterY = 0;
 let isApexReady = false;
 let numberOfUpdates = 0;
+let graphs = [];
+let stackedLine;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -177,6 +184,21 @@ window.onload = () => {
   document.getElementById('modal').addEventListener('click', () => {
     document.getElementById('modal').classList.add('hidden');
     document.getElementById('modal').classList.remove('flex');
+  });
+  
+  document.getElementById('lpTab').addEventListener("click", (event) => {
+    document.getElementById('lpGraph').classList.add('flex');
+    document.getElementById('lpGraph').classList.remove('hidden');
+    document.getElementById('mrGraph').classList.add('hidden');
+    document.getElementById('mrGraph').classList.remove('flex');
+    stackedLine = graphs[0];
+  });
+  document.getElementById('mrTab').addEventListener("click", (event) => {
+    document.getElementById('mrGraph').classList.add('flex');
+    document.getElementById('mrGraph').classList.remove('hidden');
+    document.getElementById('lpGraph').classList.add('hidden');
+    document.getElementById('lpGraph').classList.remove('flex');
+    stackedLine = graphs[1];
   });
 };
 
@@ -381,7 +403,11 @@ const start = async() => {
       if(u.data.length > maxLength)
         maxLength = u.data.length;
     });
-    initChart();
+    initChart(userDatasets, 'eloGraph');
+    let newUserDatasets = [{...userDatasets[0]}];
+    newUserDatasets[0].data = [...userDatasets[0].data];
+    newUserDatasets[0].data = newUserDatasets[0].data.reverse();
+    initChart(newUserDatasets, 'eloGraph2');
     allData.sort((a, b) => b.timestamp - a.timestamp);
     await initCards(allData);
   }
@@ -1152,8 +1178,7 @@ ShadowLine.id = 'shadowLine';
 ShadowLine.defaults = Chart.LineController.defaults;
 Chart.register(ShadowLine);
 
-let stackedLine;
-const initChart = () => {
+const initChart = (currentDataset, canvasElement) => {
   if(stackedLine) {
     stackedLine?.destroy();
   }
@@ -1181,11 +1206,11 @@ const initChart = () => {
 
 
   const data = {
-    datasets: [...userDatasets, ...tierDatasets]
+    datasets: [...currentDataset, ...tierDatasets]
   };
   
   Chart.defaults.color = 'rgb(200, 200, 200)';
-  stackedLine = new Chart(document.getElementById('eloGraph'), {
+  graphs.push(new Chart(document.getElementById(canvasElement), {
       type: 'line',
       data: data,
       options: {
@@ -1354,7 +1379,7 @@ const initChart = () => {
             labels: {
               generateLabels: function(chart) {
                 let labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                labels.forEach(label => label.datasetIndex < userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
+                labels.forEach(label => label.datasetIndex < currentDataset.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
                 return labels;
               },
               filter: (item, chartData) => !tiersColor.some(t => t.name === item.text),
@@ -1382,7 +1407,7 @@ const initChart = () => {
                 summoner_graph.hidden = false;
               }
               
-              userDatasets.forEach(dataset => {
+              currentDataset.forEach(dataset => {
                 if(dataset.label === legendItem.text) {
                   dataset.hidden = ci.isDatasetVisible(index);
                 }
@@ -1536,6 +1561,5 @@ const initChart = () => {
           },
         },
       }
-  });
-
+  }));
 };
