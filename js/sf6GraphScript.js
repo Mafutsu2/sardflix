@@ -92,6 +92,7 @@ const rankMap = {
 
 const isApexTier = (name) => ["Master", "High Master", "Grand Master", "Ultimate Master", "Legend"].includes(name);
 const divisions = ["I", "II", "III", "IV", "V"];
+const yMargin = 300;
 let currentVersion = '';
 let isScrolling = false;
 let matches = [];
@@ -255,8 +256,8 @@ const changeMinX = () => {
       }
     }
   });
-  newMinY = Math.floor((newMinY - 100) / 100) * 100;
-  newMaxY = Math.ceil((newMaxY + 100) / 100) * 100;
+  newMinY = Math.floor((newMinY - yMargin) / 100) * 100;
+  newMaxY = Math.ceil((newMaxY + yMargin) / 100) * 100;
   stackedLine.options.scales.y.min = newMinY;
   stackedLine.options.scales.y.max = newMaxY;
   minY = newMinY;
@@ -574,7 +575,7 @@ const initCards = async(allData) => {
   
   
   
-  const initialLoad = 20;
+  const initialLoad = allData.length > 20 ? 20 : allData.length - 1;
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
   const fragment1 = document.createDocumentFragment();
@@ -1125,8 +1126,8 @@ const formatData2 = (allData) => {
   maxY = Math.max(...visibleData.map(item => item[1].maxY));
   maxX = Math.max(...visibleData.map(item => item[1].nbGame));
   staticMaxX = maxX;
-  minY = Math.floor((minY - 100) / 100) * 100;
-  maxY = Math.ceil((maxY + 100) / 100) * 100;
+  minY = Math.floor((minY - yMargin) / 100) * 100;
+  maxY = Math.ceil((maxY + yMargin) / 100) * 100;
   setTicksStep(maxX);
   return newUserDatasets;
 };
@@ -1393,8 +1394,8 @@ const initChart = () => {
               minY = Math.min(...visibleData.map(item => item[1].minY));
               maxY = Math.max(...visibleData.map(item => item[1].maxY));
               maxX = Math.max(...visibleData.map(item => item[1].nbGame));
-              minY = Math.floor((minY - 100) / 100) * 100;
-              maxY = Math.ceil((maxY + 100) / 100) * 100;
+              minY = Math.floor((minY - yMargin) / 100) * 100;
+              maxY = Math.ceil((maxY + yMargin) / 100) * 100;
               setTicksStep(maxX);
 
               stackedLine.options.scales.y.min= minY;
