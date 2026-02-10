@@ -93,6 +93,7 @@ const rankMap = {
 
 const isApexTier = (name) => ["Master", "High Master", "Grand Master", "Ultimate Master", "Legend"].includes(name);
 const divisions = ["I", "II", "III", "IV", "V"];
+const yMargin = 300;
 let matches = [];
 let sessions = [];
 let searchPlayerSession = {};
@@ -187,6 +188,10 @@ const onClickTab = (tabId, graphId, type) => {
   currentGraph = graphs.find(g => g.type === type);
 };
 
+const formatName = (fighter, character) => {
+  return fighter + ' (' + character + ')';
+};
+
 const getNumber = (value, defaultValue) => {
   const num = parseInt(value);
   return isNaN(num) || num === 0 ? defaultValue : num;
@@ -262,8 +267,8 @@ const setBounds = (graph) => {
       }
     }
   });
-  newMinY = Math.floor((newMinY - 100) / 100) * 100;
-  newMaxY = Math.ceil((newMaxY + 100) / 100) * 100;
+  newMinY = Math.floor((newMinY - yMargin) / 100) * 100;
+  newMaxY = Math.ceil((newMaxY + yMargin) / 100) * 100;
   graph.chart.options.scales.y.min = newMinY;
   graph.chart.options.scales.y.max = newMaxY;
   graph.minY = newMinY;
@@ -350,7 +355,7 @@ const getMatches = async(season) => {
   } else {
     const allMatches = await response.json();
     matches = Array.isArray(allMatches) ? allMatches : allMatches.matches;
-    lp = allMatches?.lp;
+    lps = allMatches?.lp;
     const threshold = allMatches?.thresholds?.legend;
     ladderMaster[ladderMaster.length - 1].min = threshold?.mr;
     ladderMaster[ladderMaster.length - 1].timestamp = threshold?.timestamp;
@@ -476,7 +481,7 @@ const initCards = async(allData) => {
     <div class="flex justify-center items-center w-[25px] h-[25px] rounded-[6px] overflow-hidden">
       <img class="w-[30px] h-[30px] max-w-none" src="assets/sniper.webp" alt="snipers" />
     </div>
-    <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${snipers[0].games}</div>
+    <div class="flex justify-center items-center p-[4px] h-[25px] rounded-[6px] overflow-hidden">${snipers.length}</div>
   `;
   sniperInfoDiv.addEventListener('click', (e) => {
     document.getElementById('champDetails').innerHTML = '';
@@ -554,7 +559,7 @@ const initCards = async(allData) => {
   
   
   
-  const initialLoad = 20;
+  const initialLoad = allData.length > 20 ? 20 : allData.length - 1;
   let currentSession = -1;
   let gameCards = document.getElementById('gameCards');
   const fragment1 = document.createDocumentFragment();
@@ -599,7 +604,8 @@ const initCards = async(allData) => {
       newEl.className = 'card remake !h-[90px]';
       hoverClassName = 'remakeHover';
     }
-    if(summonersInfo[d.character] && summonersInfo[d.character].hidden){
+    let uniqueSummoner = formatName(d.fighter, d.character);
+    if(summonersInfo[uniqueSummoner] && summonersInfo[uniqueSummoner].hidden){
       newEl.classList.add('!hidden');
     } else {
       newEl.classList.add('!flex');
@@ -683,7 +689,7 @@ const initCards = async(allData) => {
     let date = new Date(d.timestamp * 1000);
     newEl.innerHTML += `
       <div class="flex justify-between text-[12px] opacity-80">
-        <a class="cursor-pointer transition-colors duration-200 ease-out hover:text-white overflow-hidden whitespace-nowrap text-ellipsis" href="https://www.streetfighter.com/6/buckler/profile/${d.fighterId}" rel="noopener noreferrer" target="_blank">Sardoche VS ${d.vsFighter}</a>
+        <a class="cursor-pointer transition-colors duration-200 ease-out hover:text-white overflow-hidden whitespace-nowrap text-ellipsis" href="https://www.streetfighter.com/6/buckler/profile/${d.fighterId}" rel="noopener noreferrer" target="_blank">${d.fighter} VS ${d.vsFighter ? d.vsFighter : ''}</a>
         <div class="pl-[6px] shrink-0">${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}</div>
       </div>
       <div class="flex grow text-[14px]">
@@ -838,9 +844,9 @@ const formatData1 = () => {
   let allData = [];
   let sessionCounter = 0;
   matches.forEach((g, i) => {
-    let nextGame = findNextGame(g, i);
+    let nextGame = findNextGame(g, i, 'lp');
     if(!nextGame)
-      nextGame = lp.find(l => l.fighter_id === g.fighter_id && l.character_id === g.character_id);
+      nextGame = lps.find(l => l.fighter_id === g.fighter_id && l.character_id === g.character_id);
     
     let newTier = ladder.find(l => l.id === nextGame.league_rank);
     let newMrTier = ladderMaster.find(l => l.id === nextGame.master_rank);
@@ -854,6 +860,7 @@ const formatData1 = () => {
       version: g.version,
       timestamp: g.timestamp,
       outcome: g.is_victory,
+      fighter: g.fighter,
       fighterId: g.fighter_id,
       character: g.character,
       characterId: g.character_id,
@@ -861,7 +868,7 @@ const formatData1 = () => {
       rounds: g.rounds.split(';'),
       lp: g.league_point,
       newLp: nextGame.league_point,
-      placementLp: nextGame.league_point === -1 ? findNextGame(g, i, 'lp')?.league_point : null,
+      placementLp: nextGame.league_point === -1 ? nextGame : null,
       lpDiff: lpDiff,
       tier: g.league_rank,
       newTier: newTier?.tier,
@@ -869,7 +876,7 @@ const formatData1 = () => {
       newSymbol: newTier?.symbol,
       mrLp: g.master_rating,
       newMrLp: nextGame.master_rating,
-      placementMrLp: nextGame.master_rating === 0 ? findNextGame(g, i, 'mr')?.master_rating : null,
+      placementMrLp: nextGame.master_rating === 0 ? nextGame : null,
       mrLpDiff: mrLpDiff,
       mrRank: g.master_ranking,
       mrTier: g.master_rank,
@@ -919,24 +926,27 @@ const formatData1 = () => {
   
   //snipers stats
   allData.forEach(d => {
-    let sniper = snipers.find(s => s.name === d.vsFighter);
-    if(!sniper) {
-      let sIndex = snipers.push({
-        name: d.vsFighter,
-        wins: 0,
-        losses: 0,
-        games: 0,
-      });
-      sniper = snipers[sIndex - 1];
+    if(d.vsFighter) {
+      let sniper = snipers.find(s => s.name === d.vsFighter);
+      if(!sniper) {
+        let sIndex = snipers.push({
+          name: d.vsFighter,
+          wins: 0,
+          losses: 0,
+          games: 0,
+        });
+        sniper = snipers[sIndex - 1];
+      }
+      sniper.wins += d.outcome === 1 ? 1 : 0;
+      sniper.losses += d.outcome === 0 ? 1 : 0;
+      sniper.games ++;
     }
-    sniper.wins += d.outcome === 1 ? 1 : 0;
-    sniper.losses += d.outcome === 0 ? 1 : 0;
-    sniper.games ++;
   });
   
   //sessions stats
   allData.forEach(d => {
     if(d.session !== -1) {
+      let label = formatName(d.fighter, d.character);
       let session = sessions.find(s => s.id === d.session);
       if(!session) {
         let sIndex = sessions.push({
@@ -946,20 +956,20 @@ const formatData1 = () => {
         });
         session = sessions[sIndex - 1];
       }
-      if(session.details[d.character] === undefined) {
-        session.details[d.character] = {
+      if(session.details[label] === undefined) {
+        session.details[label] = {
           wins: 0,
           losses: 0,
           lpGained: 0,
           mrGained: 0,
         };
-        session.summoners.push(d.character);
+        session.summoners.push(label);
       }
       
-      session.details[d.character].wins += d.outcome === 1 ? 1 : 0;
-      session.details[d.character].losses += d.outcome === 0 ? 1 : 0;
-      session.details[d.character].lpGained += d.lpDiff;
-      session.details[d.character].mrGained += d.mrLpDiff;
+      session.details[label].wins += d.outcome === 1 ? 1 : 0;
+      session.details[label].losses += d.outcome === 0 ? 1 : 0;
+      session.details[label].lpGained += d.lpDiff;
+      session.details[label].mrGained += d.mrLpDiff;
     }
   });
   matches = null;
@@ -1015,11 +1025,11 @@ const formatDatasets = () => {
   let userMrDatasets = [];
   let summoners = [];
   allData.forEach((m, mIndex) => {
-    const currentSummoner = summoners.find(s => s.character === m.character);
+    const currentSummoner = summoners.find(s => s.character === m.character && s.fighter === m.fighter);
     if(currentSummoner)
       currentSummoner.lastIndex = mIndex;
     else
-      summoners.push({character: m.character, lastIndex: 0});
+      summoners.push({character: m.character, fighter: m.fighter, label: formatName(m.fighter, m.character), lastIndex: 0});
   });
   
   //find the order accounts were last played on to not have an old curve overlaping a new one
@@ -1036,16 +1046,17 @@ const formatDatasets = () => {
   curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
   
   summoners.forEach((s, sIndex) => {
-    let summoner_graph = summonersInfo[s.character];
+    let summoner_graph = summonersInfo[s.label];
     if(!summoner_graph) {
-      summonersInfo[s.character] = {minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.character] ? true : false};
-      summoner_graph = summonersInfo[s.character];
+      summonersInfo[s.label] = {minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.label] ? true : false};
+      summoner_graph = summonersInfo[s.label];
     }
     
     let playerData = [];
     let counter = 1;
     allData.forEach((g, i) => {
-      if(g.character === s.character) {
+      let uniqueSummoner = formatName(g.fighter, g.character);
+      if(uniqueSummoner === s.label) {
         let lpWithoutPlacement = g.newLp === -1 ? g.placementLp : g.newLp;
         
         if(playerData.length === 0) {
@@ -1078,7 +1089,7 @@ const formatDatasets = () => {
     
     userLpDatasets.push({
       type: 'line',
-      label: s.character,
+      label: s.label,
       data: playerData,
       fill: false,
       pointRadius: playerData.map((p, i) => i === 0 ? 0 : 4),
@@ -1093,7 +1104,7 @@ const formatDatasets = () => {
         borderDash: ctx => playerData[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
       },
       order: s.order,
-      hidden: summonersInfo[s.character].hidden ? true : false,
+      hidden: summonersInfo[s.label].hidden ? true : false,
       
       //custom prop
       defaultOrder: s.order,
@@ -1118,8 +1129,8 @@ const formatDatasets = () => {
     maxLength: Math.max(...userLpDatasets.map(item => item.data.length)),
     yTicks,
     xTicksStep: getTicksStep(maxX),
-    minY: Math.floor((minY - 100) / 100) * 100,
-    maxY: Math.ceil((maxY + 100) / 100) * 100,
+    minY: Math.floor((minY - yMargin) / 100) * 100,
+    maxY: Math.ceil((maxY + yMargin) / 100) * 100,
     maxX,
     defaultMaxX: maxX,
     chart: null,
@@ -1386,8 +1397,8 @@ const initChart = (graph, canvasElement) => {
               graph.minY = Math.min(...visibleData.map(item => item[1].minY));
               graph.maxY = Math.max(...visibleData.map(item => item[1].maxY));
               graph.maxX = Math.max(...visibleData.map(item => item[1].nbGame));
-              graph.minY = Math.floor((graph.minY - 100) / 100) * 100;
-              graph.maxY = Math.ceil((graph.maxY + 100) / 100) * 100;
+              graph.minY = Math.floor((graph.minY - yMargin) / 100) * 100;
+              graph.maxY = Math.ceil((graph.maxY + yMargin) / 100) * 100;
               graph.xTicksStep = getTicksStep(graph.maxX);
 
               graph.chart.options.scales.y.min= graph.minY;
@@ -1397,7 +1408,7 @@ const initChart = (graph, canvasElement) => {
               graph.chart.update();
 
               allData.forEach(d => {
-                if(d.character === legendItem.text) {
+                if(formatName(d.fighter, d.character) === legendItem.text) {
                   if(legendItem.hidden){
                     d.element.classList.remove('!flex');
                     d.element.classList.add('!hidden');

@@ -13,6 +13,7 @@ const sortsSeasons = [
   {type: 's8', name: 'Season 8'},
 ];
 const sf6SortsSeasons = [
+  {type: 's11', name: 'Season 11'},
   {type: 's10', name: 'Season 10'},
 ];
 let currentSort;
