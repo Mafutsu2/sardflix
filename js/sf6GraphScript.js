@@ -1,9 +1,5 @@
 //tailwindcss-windows-x64.exe -i css/eloGraph.css -o css/eloGraphTW.css --minify
-/*
-modifications pour plusieurs graphics
-rassembler les variables utilise par objets
 
-*/
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const colors = {
   rookie: '#FFFFFF',
@@ -97,34 +93,20 @@ const rankMap = {
 
 const isApexTier = (name) => ["Master", "High Master", "Grand Master", "Ultimate Master", "Legend"].includes(name);
 const divisions = ["I", "II", "III", "IV", "V"];
-let currentVersion = '';
-let isScrolling = false;
 let matches = [];
-let lps = [];
 let sessions = [];
 let searchPlayerSession = {};
 let snipers = [];
-let userDatasets = [];
 let allData = [];
 let champInfo = [];
-let maxLength = 1;
 let openedStats = '';
-let yTicks = [];
-let xTicksStep = 1;
 let summonersInfo = {};
 let ladder = [];
 let ladderMaster = [];
-let ladderCounter = 0;
 let uniqueCounter = 0;
-let minY = 0;
-let maxY = 0;
-let maxX = 0;
-let staticMaxX = 0;
-let masterY = 0;
-let isApexReady = false;
 let numberOfUpdates = 0;
 let graphs = [];
-let stackedLine;
+let currentGraph;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -143,14 +125,6 @@ window.onload = () => {
   });
   
   fetchMatchesAndLps();
-  document.addEventListener("scroll", (event) => {
-    if(!isScrolling) {
-      isScrolling = true;
-    }
-  });
-  document.addEventListener("scrollend", (event) => {
-    isScrolling = false;
-  });
   
   let champInfoDiv = document.getElementById('champInfo');
   champInfoDiv.addEventListener('wheel', (event) => {
@@ -161,15 +135,15 @@ window.onload = () => {
   }, {passive: false});
   
   document.getElementById('minXButton').addEventListener("click", (event) => {
-    changeMinX();
+    setBounds(currentGraph);
   });
   document.getElementById('minX').addEventListener('keypress', (e) => {
     if(e.keyCode === 13)
-      changeMinX();
+      setBounds(currentGraph);
   });
   document.getElementById('maxX').addEventListener('keypress', (e) => {
     if(e.keyCode === 13)
-      changeMinX();
+      setBounds(currentGraph);
   });
   
   document.getElementById('searchVsFighterButton').addEventListener("click", (event) => {
@@ -186,20 +160,31 @@ window.onload = () => {
     document.getElementById('modal').classList.remove('flex');
   });
   
-  document.getElementById('lpTab').addEventListener("click", (event) => {
-    document.getElementById('lpGraph').classList.add('flex');
-    document.getElementById('lpGraph').classList.remove('hidden');
-    document.getElementById('mrGraph').classList.add('hidden');
-    document.getElementById('mrGraph').classList.remove('flex');
-    stackedLine = graphs[0];
-  });
-  document.getElementById('mrTab').addEventListener("click", (event) => {
-    document.getElementById('mrGraph').classList.add('flex');
-    document.getElementById('mrGraph').classList.remove('hidden');
-    document.getElementById('lpGraph').classList.add('hidden');
-    document.getElementById('lpGraph').classList.remove('flex');
-    stackedLine = graphs[1];
-  });
+  document.getElementById('lpTab').addEventListener("click", (event) => onClickTab(event.target.id, 'lpGraph', 'lp'));
+  document.getElementById('mrTab').addEventListener("click", (event) => onClickTab(event.target.id, 'mrGraph', 'mr'));
+};
+
+const onClickTab = (tabId, graphId, type) => {
+  const tabs = document.getElementById('tabs').children;
+  for(i = 0; i < tabs.length; i++) {
+    if(tabs[i].id === tabId)
+      tabs[i].classList.add('bg-[#3c3c3c]');
+    else
+      tabs[i].classList.remove('bg-[#3c3c3c]');
+  }
+  
+  const graphsDiv = document.getElementById('graphs').children;
+  for(i = 0; i < graphsDiv.length; i++) {
+    if(graphsDiv[i].id === graphId) {
+      graphsDiv[i].classList.add('flex');
+      graphsDiv[i].classList.remove('hidden');
+    } else {
+      graphsDiv[i].classList.add('hidden');
+      graphsDiv[i].classList.remove('flex');
+    }
+  }
+  
+  currentGraph = graphs.find(g => g.type === type);
 };
 
 const getNumber = (value, defaultValue) => {
@@ -259,17 +244,17 @@ const showVsFighter = () => {
   });
 };
 
-const changeMinX = () => {
+const setBounds = (graph) => {
   let newMinX2 = getNumber(document.getElementById('minX').value, 0);
-  let newMaxX = getNumber(document.getElementById('maxX').value, staticMaxX);
+  let newMaxX = getNumber(document.getElementById('maxX').value, graph.defaultMaxX);
   let newMinX = newMinX2 > 0 && newMinX2 < newMaxX ? newMinX2 : 0;
-  newMaxX = newMaxX < staticMaxX && newMaxX > newMinX2 ? newMaxX : staticMaxX;
-  stackedLine.options.scales.x.min = newMinX;
-  stackedLine.options.scales.x.max = newMaxX;
+  newMaxX = newMaxX < graph.defaultMaxX && newMaxX > newMinX2 ? newMaxX : graph.defaultMaxX;
+  graph.chart.options.scales.x.min = newMinX;
+  graph.chart.options.scales.x.max = newMaxX;
   
   let newMinY = 99999;
   let newMaxY = 0;
-  userDatasets.forEach(u => {
+  graph.userDatasets.forEach(u => {
     if(!u.hidden && u.data.length > newMinX) {
       for(let i = newMinX; i < u.data.length && i < newMaxX; i++) {
         newMinY = u.data[i].y < newMinY ? u.data[i].y : newMinY;
@@ -279,29 +264,24 @@ const changeMinX = () => {
   });
   newMinY = Math.floor((newMinY - 100) / 100) * 100;
   newMaxY = Math.ceil((newMaxY + 100) / 100) * 100;
-  stackedLine.options.scales.y.min = newMinY;
-  stackedLine.options.scales.y.max = newMaxY;
-  minY = newMinY;
-  maxY = newMaxY;
+  graph.chart.options.scales.y.min = newMinY;
+  graph.chart.options.scales.y.max = newMaxY;
+  graph.minY = newMinY;
+  graph.maxY = newMaxY;
   
-  setTicksStep(newMaxX);
-  stackedLine.options.scales.x.ticks.stepSize = xTicksStep;
+  graph.xTicksStep = getTicksStep(newMaxX);
+  graph.chart.options.scales.x.ticks.stepSize = graph.xTicksStep;
   
-  stackedLine.update();
+  graph.chart.update();
 };
 
-const setTicksStep = (max) => {
+const getTicksStep = (max) => {
   //step sizes will be [200 , 100 , 50  , 10 , 5  , 1]
   let stepSizesRatio = [6000, 3000, 1500, 300, 150, 30];
-  stepSizesRatio.some(s => {
-    if(max >= s) {
-      xTicksStep = Math.floor(s/30);
-      return true;
-    }
-  });
+  return Math.floor(stepSizesRatio.find(s => max >= s)/30);
 };
 
-const getApexTiers = async() => {
+const getApexTiers = () => {
   tiers.forEach((t, index) => {
     const tierColor = tiersColor.find(c => c.name === t.tier);
     if(t.tier != 'Master') {
@@ -320,24 +300,11 @@ const getApexTiers = async() => {
     l.colorText = tierColor.colorText;
     l.colorGrid = tierColor.colorGrid;
   });
-  
-  ladder.forEach((l, i) => {
-    yTicks.push({value: l.min});
-    if(l.tier === 'Platinum' || l.tier === 'Diamond')
-      yTicks.push({value: l.min + 600});
-  });
-  masterY = ladder[ladder.length - 1].min;
-  maxY = 26000;
-  
-  isApexReady = true;
-  start();
 };
 
 const init = () => {
   matches = [];
-  lps = [];
   sessions = [];
-  userDatasets = [];
   allData = [];
   champInfo = [{
     id: -1,
@@ -350,12 +317,8 @@ const init = () => {
     tiers: [],
     vsCharacters: [],
   }];
-  maxLength = 1;
   openedStats = '';
-
   summonersInfo = {};
-  uniqueCounter = 0;
-  ladderCounter = 0;
   ladder = [];
   ladderMaster = [
     {id: 36, tier: 'Master', symbol: 'M', min: 1500},
@@ -364,8 +327,8 @@ const init = () => {
     {id: 42, tier: 'Ultimate Master', symbol: 'UM', min: 1800},
     {id: 37, tier: 'Legend', symbol: 'L', min: 0},
   ];
-  yTicks = [];
-  isApexReady = false;
+  graphs = [];
+  
   document.getElementById('champInfo').innerText = '';
   document.getElementById('gameCards').innerText = '';
 };
@@ -396,21 +359,12 @@ const getMatches = async(season) => {
 };
 
 const start = async() => {
-  if(isApexReady && matches.length > 0){
-    allData = formatData1();
-    userDatasets = formatData2(allData);
-    userDatasets.forEach((u, i) => {
-      if(u.data.length > maxLength)
-        maxLength = u.data.length;
-    });
-    initChart(userDatasets, 'eloGraph');
-    let newUserDatasets = [{...userDatasets[0]}];
-    newUserDatasets[0].data = [...userDatasets[0].data];
-    newUserDatasets[0].data = newUserDatasets[0].data.reverse();
-    initChart(newUserDatasets, 'eloGraph2');
-    allData.sort((a, b) => b.timestamp - a.timestamp);
-    await initCards(allData);
-  }
+  allData = formatData1();
+  formatDatasets();
+  onClickTab('lpTab', 'lpGraph', 'lp');
+  initChart(currentGraph, 'eloGraph');
+  allData.sort((a, b) => b.timestamp - a.timestamp);
+  await initCards(allData);
 };
 
 const createRanksDiv = (start, end, isMaster, parentDiv) => {
@@ -753,7 +707,7 @@ const initCards = async(allData) => {
     `;
     newEl.addEventListener('mouseenter', event => {
       newEl.classList.add(hoverClassName);
-      userDatasets.forEach(dataset => {
+      currentGraph.userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => {
           if(ctx.p1.raw.replayId === d.replayId)
             return ctx.p1.raw.colorHover;
@@ -779,7 +733,7 @@ const initCards = async(allData) => {
     });
     newEl.addEventListener('mouseleave', event => {
       newEl.classList.remove(hoverClassName);
-      userDatasets.forEach(dataset => {
+      currentGraph.userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => ctx.p1.raw.color;
         dataset.pointBackgroundColor = dataset.data.map(data => data.color);
       });
@@ -802,7 +756,7 @@ const initCards = async(allData) => {
   }, 100);
   
   gameCards.addEventListener('mouseleave', event => {
-    userDatasets.forEach(dataset => {
+    currentGraph.userDatasets.forEach(dataset => {
       if(dataset.order !== dataset.defaultOrder) {
         dataset.order = dataset.defaultOrder;
         dataset.type = 'line';
@@ -819,7 +773,7 @@ const updateGraphIfNoOtherRequest = () => {
   const currentUpdateNb = numberOfUpdates;
   setTimeout(() => {
     if(numberOfUpdates === currentUpdateNb){
-      stackedLine.update();
+      currentGraph.chart.update();
     }
   }, 30);
 };
@@ -1008,6 +962,7 @@ const formatData1 = () => {
       session.details[d.character].mrGained += d.mrLpDiff;
     }
   });
+  matches = null;
   return allData;
 };
 
@@ -1055,10 +1010,11 @@ const addDataToCInfo = (cInfo, g, lpDiff, mrLpDiff) => {
   cInfo.totalMrLp += mrLpDiff;
 };
 
-const formatData2 = (allData) => {
-  let newUserDatasets = [];
+const formatDatasets = () => {
+  let userLpDatasets = [];
+  let userMrDatasets = [];
   let summoners = [];
-  matches.forEach((m, mIndex) => {
+  allData.forEach((m, mIndex) => {
     const currentSummoner = summoners.find(s => s.character === m.character);
     if(currentSummoner)
       currentSummoner.lastIndex = mIndex;
@@ -1120,7 +1076,7 @@ const formatData2 = (allData) => {
       }
     });
     
-    newUserDatasets.push({
+    userLpDatasets.push({
       type: 'line',
       label: s.character,
       data: playerData,
@@ -1147,14 +1103,27 @@ const formatData2 = (allData) => {
   
   const visibleData = filterHidden(summonersInfo);
 
-  minY = Math.min(...visibleData.map(item => item[1].minY));
-  maxY = Math.max(...visibleData.map(item => item[1].maxY));
-  maxX = Math.max(...visibleData.map(item => item[1].nbGame));
-  staticMaxX = maxX;
-  minY = Math.floor((minY - 100) / 100) * 100;
-  maxY = Math.ceil((maxY + 100) / 100) * 100;
-  setTicksStep(maxX);
-  return newUserDatasets;
+  let minY = Math.min(...visibleData.map(item => item[1].minY));
+  let maxY = Math.max(...visibleData.map(item => item[1].maxY));
+  let maxX = Math.max(...visibleData.map(item => item[1].nbGame));
+  let yTicks = [];
+  ladder.forEach(l => {
+    yTicks.push({value: l.min});
+    if(l.tier === 'Platinum' || l.tier === 'Diamond')
+      yTicks.push({value: l.min + 600});
+  });
+  graphs.push({
+    type: 'lp',
+    userDatasets: userLpDatasets,
+    maxLength: Math.max(...userLpDatasets.map(item => item.data.length)),
+    yTicks,
+    xTicksStep: getTicksStep(maxX),
+    minY: Math.floor((minY - 100) / 100) * 100,
+    maxY: Math.ceil((maxY + 100) / 100) * 100,
+    maxX,
+    defaultMaxX: maxX,
+    chart: null,
+  });
 };
 
 const filterHidden = (obj) => Object.entries(obj).filter(([key, value]) => !value.hidden);
@@ -1178,9 +1147,10 @@ ShadowLine.id = 'shadowLine';
 ShadowLine.defaults = Chart.LineController.defaults;
 Chart.register(ShadowLine);
 
-const initChart = (currentDataset, canvasElement) => {
-  if(stackedLine) {
-    stackedLine?.destroy();
+const initChart = (graph, canvasElement) => {
+  if(graph.chart) {
+    graph.chart?.destroy();
+    graph.chart = null;
   }
   
   let tierDatasets = [];
@@ -1190,7 +1160,7 @@ const initChart = (currentDataset, canvasElement) => {
         label: o.tier,
         data: [
           {x: 0, y: o.max},
-          {x: maxLength, y: o.max},
+          {x: graph.maxLength, y: o.max},
         ],
         fill: o.tier === "Rookie" ? 'start' : '-1',
         borderColor: 'rgba(0, 0, 0, 0)',
@@ -1206,11 +1176,11 @@ const initChart = (currentDataset, canvasElement) => {
 
 
   const data = {
-    datasets: [...currentDataset, ...tierDatasets]
+    datasets: [...graph.userDatasets, ...tierDatasets]
   };
   
   Chart.defaults.color = 'rgb(200, 200, 200)';
-  graphs.push(new Chart(document.getElementById(canvasElement), {
+  graph.chart = new Chart(document.getElementById(canvasElement), {
       type: 'line',
       data: data,
       options: {
@@ -1224,11 +1194,11 @@ const initChart = (currentDataset, canvasElement) => {
             axis: 'y',
             type: 'linear',
             beginAtZero: false,
-            min: minY,
-            max: maxY,
+            min: graph.minY,
+            max: graph.maxY,
             display: true,
             afterBuildTicks: (axis) => {
-              axis.ticks = yTicks;
+              axis.ticks = graph.yTicks;
             },
             ticks: {
               offset: false,
@@ -1240,7 +1210,7 @@ const initChart = (currentDataset, canvasElement) => {
               },
               callback: function(value, index, ticks) {
                 let l = ladder.find(o => value === o.min);
-                if(!l || value < minY || value > maxY)
+                if(!l || value < graph.minY || value > graph.maxY)
                   return '';
                 return l.tier + ' ' + l.division;
               },
@@ -1249,7 +1219,7 @@ const initChart = (currentDataset, canvasElement) => {
               color: (tick) => {
                 let found = ladder.find(l => tick.tick.value >= l.min && tick.tick.value < l.max);
                 let color = found && found.colorGrid ? found.colorGrid : 'rgba(200, 200, 200, 0.08)';
-                return tick.tick.value >= minY && tick.tick.value <= maxY ? color : '';
+                return tick.tick.value >= graph.minY && tick.tick.value <= graph.maxY ? color : '';
               },
               tickBorderDash: [5, 5],
               z: 1
@@ -1264,14 +1234,14 @@ const initChart = (currentDataset, canvasElement) => {
             type: 'linear',
             beginAtZero: true,
             min: 0,
-            max: maxX + 1,
+            max: graph.maxX + 1,
             ticks: {
               offset: true,
-              stepSize: xTicksStep,
+              stepSize: graph.xTicksStep,
               autoSkip: true,
               includeBounds: false,
               callback: function(value, index, ticks) {
-                if(value % xTicksStep === 0) {
+                if(value % graph.xTicksStep === 0) {
                   return value;
                 }
               },
@@ -1308,20 +1278,18 @@ const initChart = (currentDataset, canvasElement) => {
             let raw = elements[0].element.raw;
             allData.forEach(currentGame => {
               if(currentGame.replayId === raw.replayId) {
-                if(!isScrolling) {
-                  switch(currentGame.outcome) {
-                    case 1:
-                      currentGame.element.classList.remove('win');
-                      currentGame.element.classList.add('winHover');
-                      break;
-                    case 0:
-                      currentGame.element.classList.remove('lose');
-                      currentGame.element.classList.add('loseHover');
-                      break;
-                    default:
-                      currentGame.element.classList.remove('remake');
-                      currentGame.element.classList.add('remakeHover');
-                  }
+                switch(currentGame.outcome) {
+                  case 1:
+                    currentGame.element.classList.remove('win');
+                    currentGame.element.classList.add('winHover');
+                    break;
+                  case 0:
+                    currentGame.element.classList.remove('lose');
+                    currentGame.element.classList.add('loseHover');
+                    break;
+                  default:
+                    currentGame.element.classList.remove('remake');
+                    currentGame.element.classList.add('remakeHover');
                 }
               } else {
                 switch(currentGame.outcome) {
@@ -1364,7 +1332,7 @@ const initChart = (currentDataset, canvasElement) => {
               }
             });
           }
-          stackedLine.update();
+          graph.chart.update();
         },
         layout: {
           padding: {
@@ -1379,7 +1347,7 @@ const initChart = (currentDataset, canvasElement) => {
             labels: {
               generateLabels: function(chart) {
                 let labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                labels.forEach(label => label.datasetIndex < currentDataset.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
+                labels.forEach(label => label.datasetIndex < graph.userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
                 return labels;
               },
               filter: (item, chartData) => !tiersColor.some(t => t.name === item.text),
@@ -1407,7 +1375,7 @@ const initChart = (currentDataset, canvasElement) => {
                 summoner_graph.hidden = false;
               }
               
-              currentDataset.forEach(dataset => {
+              graph.userDatasets.forEach(dataset => {
                 if(dataset.label === legendItem.text) {
                   dataset.hidden = ci.isDatasetVisible(index);
                 }
@@ -1415,18 +1383,18 @@ const initChart = (currentDataset, canvasElement) => {
               
               const visibleData = filterHidden(summonersInfo);
 
-              minY = Math.min(...visibleData.map(item => item[1].minY));
-              maxY = Math.max(...visibleData.map(item => item[1].maxY));
-              maxX = Math.max(...visibleData.map(item => item[1].nbGame));
-              minY = Math.floor((minY - 100) / 100) * 100;
-              maxY = Math.ceil((maxY + 100) / 100) * 100;
-              setTicksStep(maxX);
+              graph.minY = Math.min(...visibleData.map(item => item[1].minY));
+              graph.maxY = Math.max(...visibleData.map(item => item[1].maxY));
+              graph.maxX = Math.max(...visibleData.map(item => item[1].nbGame));
+              graph.minY = Math.floor((graph.minY - 100) / 100) * 100;
+              graph.maxY = Math.ceil((graph.maxY + 100) / 100) * 100;
+              graph.xTicksStep = getTicksStep(graph.maxX);
 
-              stackedLine.options.scales.y.min= minY;
-              stackedLine.options.scales.y.max = maxY;
-              stackedLine.options.scales.x.max = maxX + 1;
-              stackedLine.options.scales.x.ticks.stepSize = xTicksStep;
-              stackedLine.update();
+              graph.chart.options.scales.y.min= graph.minY;
+              graph.chart.options.scales.y.max = graph.maxY;
+              graph.chart.options.scales.x.max = graph.maxX + 1;
+              graph.chart.options.scales.x.ticks.stepSize = graph.xTicksStep;
+              graph.chart.update();
 
               allData.forEach(d => {
                 if(d.character === legendItem.text) {
@@ -1561,5 +1529,5 @@ const initChart = (currentDataset, canvasElement) => {
           },
         },
       }
-  }));
+  });
 };
