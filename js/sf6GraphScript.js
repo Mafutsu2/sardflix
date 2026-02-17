@@ -1,4 +1,5 @@
 //tailwindcss-windows-x64.exe -i css/eloGraph.css -o css/eloGraphTW.css --minify
+
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const colors = {
   rookie: '#FFFFFF',
@@ -9,13 +10,15 @@ const colors = {
   platinum: '#70C1C5',
   diamond: '#BC6FA8',
   master: '#51E1A6',
-  highmaster: '#25AEDD',
-  grandmaster: '#FBE31F',
-  ultimatemaster: '#FF3480',
+  'high master': '#25AEDD',
+  'grand master': '#FBE31F',
+  'ultimate master': '#FF3480',
   legend: '#F15713',
   opacityBackground: '26',
-  opacityText: 'ff',
+  opacityText: '88',
   opacityGrid: '40',
+  defaultColorText: '#c8c8c8',
+  defaultColorTextFaded: '#c8c8c888',
 };
 const textColors = {
   rookie: 'text-[#FFFFFF]',
@@ -26,9 +29,9 @@ const textColors = {
   platinum: 'text-[#70C1C5]',
   diamond: 'text-[#BC6FA8]',
   master: 'text-[#51E1A6]',
-  highmaster: 'text-[#25AEDD]',
-  grandmaster: 'text-[#FBE31F]',
-  ultimatemaster: 'text-[#FF3480]',
+  'high master': 'text-[#25AEDD]',
+  'grand master': 'text-[#FBE31F]',
+  'ultimate master': 'text-[#FF3480]',
   legend: 'text-[#F15713]',
   'undefined': '',
 };
@@ -48,20 +51,19 @@ const curvesColors = [
   {name: 'teal', colorLight: '#57ebd2', colorDark: '#4d877d', colorHover: '#b0f5e9'},
   {name: 'pink', colorLight: '#eb57df', colorDark: '#804b7b', colorHover: '#f5a9ef'},
 ];
-const tiersColor = [
-  {name: "Rookie", color: colors.rookie + colors.opacityBackground, colorText: colors.rookie + colors.opacityText, colorGrid: colors.rookie + colors.opacityGrid},
-  {name: "Iron", color: colors.iron + colors.opacityBackground, colorText: colors.iron + colors.opacityText, colorGrid: colors.iron + colors.opacityGrid},
-  {name: "Bronze", color: colors.bronze + colors.opacityBackground, colorText: colors.bronze + colors.opacityText, colorGrid: colors.bronze + colors.opacityGrid},
-  {name: "Silver", color: colors.silver + colors.opacityBackground, colorText: colors.silver + colors.opacityText, colorGrid: colors.silver + colors.opacityGrid},
-  {name: "Gold", color: colors.gold + colors.opacityBackground, colorText: colors.gold + colors.opacityText, colorGrid: colors.gold + colors.opacityGrid},
-  {name: "Platinum", color: colors.platinum + colors.opacityBackground, colorText: colors.platinum + colors.opacityText, colorGrid: colors.platinum + colors.opacityGrid},
-  {name: "Diamond", color: colors.diamond + colors.opacityBackground, colorText: colors.diamond + colors.opacityText, colorGrid: colors.diamond + colors.opacityGrid},
-  {name: "Master", color: colors.master + colors.opacityBackground, colorText: colors.master + colors.opacityText, colorGrid: colors.master + colors.opacityGrid},
-  {name: "High Master", color: colors.highmaster + colors.opacityBackground, colorText: colors.highmaster + colors.opacityText, colorGrid: colors.highmaster + colors.opacityGrid},
-  {name: "Grand Master", color: colors.grandmaster + colors.opacityBackground, colorText: colors.grandmaster + colors.opacityText, colorGrid: colors.grandmaster + colors.opacityGrid},
-  {name: "Ultimate Master", color: colors.ultimatemaster + colors.opacityBackground, colorText: colors.ultimatemaster + colors.opacityText, colorGrid: colors.ultimatemaster + colors.opacityGrid},
-  {name: "Legend", color: colors.legend + colors.opacityBackground, colorText: colors.legend + colors.opacityText, colorGrid: colors.legend + colors.opacityGrid},
-];
+let tiersColor = [];
+for(let key in textColors) {
+  if(key !== 'undefined') {
+    let name = key.split(' ').map(n => n[0].toUpperCase() + n.substring(1));
+    tiersColor.push({
+      name: name.join(' '),
+      color: colors[key] + colors.opacityBackground,
+      colorText: colors[key],
+      colorTextFaded: colors[key] + colors.opacityText,
+      colorGrid: colors[key] + colors.opacityGrid
+    });
+  }
+}
 const tiers = [
   {tier: 'Rookie', symbol: 'R', min: 0, step: 200},
   {tier: 'Iron', symbol: 'I', min: 1000, step: 400},
@@ -92,33 +94,20 @@ const rankMap = {
 
 const isApexTier = (name) => ["Master", "High Master", "Grand Master", "Ultimate Master", "Legend"].includes(name);
 const divisions = ["I", "II", "III", "IV", "V"];
-const yMargin = 300;
-let currentVersion = '';
-let isScrolling = false;
 let matches = [];
-let lps = [];
 let sessions = [];
 let searchPlayerSession = {};
 let snipers = [];
-let userDatasets = [];
 let allData = [];
 let champInfo = [];
-let maxLength = 1;
 let openedStats = '';
-let yTicks = [];
-let xTicksStep = 1;
 let summonersInfo = {};
-let ladder = [];
+let ladderLeaguePoint = [];
 let ladderMaster = [];
-let ladderCounter = 0;
 let uniqueCounter = 0;
-let minY = 0;
-let maxY = 0;
-let maxX = 0;
-let staticMaxX = 0;
-let masterY = 0;
-let isApexReady = false;
 let numberOfUpdates = 0;
+let graphs = [];
+let currentGraph;
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -137,14 +126,6 @@ window.onload = () => {
   });
   
   fetchMatchesAndLps();
-  document.addEventListener("scroll", (event) => {
-    if(!isScrolling) {
-      isScrolling = true;
-    }
-  });
-  document.addEventListener("scrollend", (event) => {
-    isScrolling = false;
-  });
   
   let champInfoDiv = document.getElementById('champInfo');
   champInfoDiv.addEventListener('wheel', (event) => {
@@ -155,15 +136,15 @@ window.onload = () => {
   }, {passive: false});
   
   document.getElementById('minXButton').addEventListener("click", (event) => {
-    changeMinX();
+    setBounds(currentGraph);
   });
   document.getElementById('minX').addEventListener('keypress', (e) => {
     if(e.keyCode === 13)
-      changeMinX();
+      setBounds(currentGraph);
   });
   document.getElementById('maxX').addEventListener('keypress', (e) => {
     if(e.keyCode === 13)
-      changeMinX();
+      setBounds(currentGraph);
   });
   
   document.getElementById('searchVsFighterButton').addEventListener("click", (event) => {
@@ -179,6 +160,32 @@ window.onload = () => {
     document.getElementById('modal').classList.add('hidden');
     document.getElementById('modal').classList.remove('flex');
   });
+  
+  document.getElementById('lpTab').addEventListener("click", (event) => onClickTab(event.target.id, 'lpGraph', 'lp'));
+  document.getElementById('mrTab').addEventListener("click", (event) => onClickTab(event.target.id, 'mrGraph', 'mr'));
+};
+
+const onClickTab = (tabId, graphId, type) => {
+  const tabs = document.getElementById('tabs').children;
+  for(i = 0; i < tabs.length; i++) {
+    if(tabs[i].id === tabId)
+      tabs[i].classList.add('bg-[#3c3c3c]');
+    else
+      tabs[i].classList.remove('bg-[#3c3c3c]');
+  }
+  
+  const graphsDiv = document.getElementById('graphs').children;
+  for(i = 0; i < graphsDiv.length; i++) {
+    if(graphsDiv[i].id === graphId) {
+      graphsDiv[i].style.display = 'block';
+    } else {
+      graphsDiv[i].style.display = 'none';
+    }
+  }
+  
+  currentGraph = graphs.find(g => g.type === type);
+  if(sessions[0]?.notHiddenSummoners)
+    refreshSessions(null);
 };
 
 const formatName = (fighter, character) => {
@@ -191,34 +198,15 @@ const getNumber = (value, defaultValue) => {
 }
 
 const showVsFighter = () => {
-  let fighterName = document.getElementById('searchVsFighter').value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-  if(fighterName === '') {
-    let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
-    curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
-    allData.forEach(d => {
-      if(curvesHiddenVisibility[d.character]) {
-        d.element.classList.remove('!flex');
-        d.element.classList.add('!hidden');
-      } else {
-        d.element.classList.remove('!hidden');
-        d.element.classList.add('!flex');
-      }
-    });
-    
-    searchPlayerSession.element.children[0].classList.remove('!block');
-    searchPlayerSession.element.children[0].classList.add('!hidden');
-    refreshSessions(null);
-    return;
-  }
-  searchPlayerSession.element.children[0].classList.remove('!hidden');
-  searchPlayerSession.element.children[0].classList.add('!block');
+  const fighterName = document.getElementById('searchVsFighter').value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const isEmptySearch = fighterName === '';
   
   searchPlayerSession.details.fighter.wins = 0;
   searchPlayerSession.details.fighter.losses = 0;
   searchPlayerSession.details.fighter.lpGained = 0;
   searchPlayerSession.details.fighter.mrGained = 0;
   allData.forEach(d => {
-    if(d.vsFighter.toLowerCase().includes(fighterName)) {
+    if(summonersInfo[formatName(d.fighter, d.character)]?.hidden === false && (isEmptySearch || d.vsFighter?.toLowerCase().includes(fighterName))) {
       if(d.outcome === 1)
         searchPlayerSession.details.fighter.wins += 1;
       else if(d.outcome === 0)
@@ -227,32 +215,44 @@ const showVsFighter = () => {
       searchPlayerSession.details.fighter.mrGained += d.mrLpDiff;
       d.element.classList.remove('!hidden');
       d.element.classList.add('!flex');
-      searchPlayerSession.isHidden = false;
     } else {
       d.element.classList.remove('!flex');
       d.element.classList.add('!hidden');
-      searchPlayerSession.isHidden = true;
     }
   });
-  setSessionDiv(searchPlayerSession);
-  sessions.forEach(s => {
-    s.element.children[0].classList.remove('!block');
-    s.element.children[0].classList.add('!hidden');
-    s.isHidden = true;
-  });
+  
+  if(isEmptySearch) {
+    searchPlayerSession.element.children[0].classList.remove('!block');
+    searchPlayerSession.element.children[0].classList.add('!hidden');
+    searchPlayerSession.isHidden = true;
+    refreshSessions(null);
+  } else {
+    searchPlayerSession.isHidden = false;
+    setSessionDiv(searchPlayerSession);
+    sessions.forEach(s => {
+      s.element.children[0].classList.remove('!block');
+      s.element.children[0].classList.add('!hidden');
+      s.isHidden = true;
+      searchPlayerSession.element.children[0].classList.remove('!hidden');
+      searchPlayerSession.element.children[0].classList.add('!block');
+    });
+  }
 };
 
-const changeMinX = () => {
+const setBounds = (graph) => {
+  const visibleData = filterHidden(summonersInfo);
+  const visibleMaxX = Math.max(...visibleData.map(item => item[1][graph.type].nbGame));
+  
   let newMinX2 = getNumber(document.getElementById('minX').value, 0);
-  let newMaxX = getNumber(document.getElementById('maxX').value, staticMaxX);
+  let newMaxX = getNumber(document.getElementById('maxX').value, visibleMaxX);
   let newMinX = newMinX2 > 0 && newMinX2 < newMaxX ? newMinX2 : 0;
-  newMaxX = newMaxX < staticMaxX && newMaxX > newMinX2 ? newMaxX : staticMaxX;
-  stackedLine.options.scales.x.min = newMinX;
-  stackedLine.options.scales.x.max = newMaxX;
+  newMaxX = newMaxX < visibleMaxX && newMaxX > newMinX2 ? newMaxX : visibleMaxX;
+  graph.chart.options.scales.x.min = newMinX;
+  graph.chart.options.scales.x.max = newMaxX;
   
   let newMinY = 99999;
   let newMaxY = 0;
-  userDatasets.forEach(u => {
+  graph.userDatasets.forEach(u => {
     if(!u.hidden && u.data.length > newMinX) {
       for(let i = newMinX; i < u.data.length && i < newMaxX; i++) {
         newMinY = u.data[i].y < newMinY ? u.data[i].y : newMinY;
@@ -260,42 +260,41 @@ const changeMinX = () => {
       }
     }
   });
-  newMinY = Math.floor((newMinY - yMargin) / 100) * 100;
-  newMaxY = Math.ceil((newMaxY + yMargin) / 100) * 100;
-  stackedLine.options.scales.y.min = newMinY;
-  stackedLine.options.scales.y.max = newMaxY;
-  minY = newMinY;
-  maxY = newMaxY;
+  newMinY = Math.floor((newMinY - graph.yMarginBottom) / 100) * 100;
+  newMaxY = Math.ceil((newMaxY + graph.yMarginTop) / 100) * 100;
+  graph.chart.options.scales.y.min = newMinY;
+  graph.chart.options.scales.y.max = newMaxY;
+  graph.minY = newMinY;
+  graph.maxY = newMaxY;
   
-  setTicksStep(newMaxX);
-  stackedLine.options.scales.x.ticks.stepSize = xTicksStep;
+  graph.xTicksStep = getTicksStep(newMaxX);
+  graph.chart.options.scales.x.ticks.stepSize = graph.xTicksStep;
   
-  stackedLine.update();
+  graph.chart.update();
 };
 
-const setTicksStep = (max) => {
+const getTicksStep = (max) => {
   //step sizes will be [200 , 100 , 50  , 10 , 5  , 1]
   let stepSizesRatio = [6000, 3000, 1500, 300, 150, 30];
-  stepSizesRatio.some(s => {
-    if(max >= s) {
-      xTicksStep = Math.floor(s/30);
-      return true;
-    }
-  });
+  return max < stepSizesRatio[stepSizesRatio.length - 1] ? 1 : Math.floor(stepSizesRatio.find(s => max >= s)/30);
 };
 
-const getApexTiers = async() => {
+const setApexTiers = (threshold) => {
   tiers.forEach((t, index) => {
     const tierColor = tiersColor.find(c => c.name === t.tier);
     if(t.tier != 'Master') {
       for(let i = 0; i < 5; i++) {
         let min = t.min + (i * t.step);
-        ladder.push({id: (index * 5) + (i + 1), tier: t.tier, symbol: t.symbol, division: (i + 1) + '', min, max: min + t.step, color: tierColor.color, colorText: tierColor.colorText, colorGrid: tierColor.colorGrid});
+        ladderLeaguePoint.push({id: (index * 5) + (i + 1), tier: t.tier, symbol: t.symbol, division: (i + 1) + '', min, max: min + t.step, color: tierColor.color, colorText: tierColor.colorText, colorGrid: tierColor.colorGrid});
       }
     } else {
-      ladder.push({id: (index * 5) + 1, tier: t.tier, symbol: t.symbol, division: '', min: t.min, color: tierColor.color, colorText: tierColor.colorText, colorGrid: tierColor.colorGrid});
+      ladderLeaguePoint.push({id: (index * 5) + 1, tier: t.tier, symbol: t.symbol, division: '', min: t.min, max: 26000, color: tierColor.color, colorText: tierColor.colorText, colorGrid: tierColor.colorGrid});
     }
   });
+  
+  let legendRank = ladderMaster.find(l => l.tier === 'Legend');
+  legendRank.min = threshold?.mr;
+  legendRank.timestamp = threshold?.timestamp;
   ladderMaster.forEach((l, index) => {
     const tierColor = tiersColor.find(c => c.name === l.tier);
     l.max = ladderMaster[index + 1]?.min;
@@ -303,24 +302,12 @@ const getApexTiers = async() => {
     l.colorText = tierColor.colorText;
     l.colorGrid = tierColor.colorGrid;
   });
-  
-  ladder.forEach((l, i) => {
-    yTicks.push({value: l.min});
-    if(l.tier === 'Platinum' || l.tier === 'Diamond')
-      yTicks.push({value: l.min + 600});
-  });
-  masterY = ladder[ladder.length - 1].min;
-  maxY = 26000;
-  
-  isApexReady = true;
-  start();
+  legendRank.max = 2600;
 };
 
 const init = () => {
   matches = [];
-  lps = [];
   sessions = [];
-  userDatasets = [];
   allData = [];
   champInfo = [{
     id: -1,
@@ -333,29 +320,25 @@ const init = () => {
     tiers: [],
     vsCharacters: [],
   }];
-  maxLength = 1;
   openedStats = '';
-
   summonersInfo = {};
-  uniqueCounter = 0;
-  ladderCounter = 0;
-  ladder = [];
+  ladderLeaguePoint = [];
   ladderMaster = [
     {id: 36, tier: 'Master', symbol: 'M', min: 1500},
     {id: 40, tier: 'High Master', symbol: 'HM', min: 1600},
     {id: 41, tier: 'Grand Master', symbol: 'GM', min: 1700},
     {id: 42, tier: 'Ultimate Master', symbol: 'UM', min: 1800},
-    {id: 37, tier: 'Legend', symbol: 'L', min: 0},
+    {id: 37, tier: 'Legend', symbol: 'L', min: 0, max: 2600},
   ];
-  yTicks = [];
-  isApexReady = false;
+  graphs.forEach(g => g.chart?.destroy());
+  graphs = [];
+  
   document.getElementById('champInfo').innerText = '';
   document.getElementById('gameCards').innerText = '';
 };
 
 const fetchMatchesAndLps = () => {
   init();
-  getApexTiers();
   getMatches(currentSort.type);
 };
 
@@ -371,30 +354,29 @@ const getMatches = async(season) => {
     const allMatches = await response.json();
     matches = Array.isArray(allMatches) ? allMatches : allMatches.matches;
     lps = allMatches?.lp;
-    const threshold = allMatches?.thresholds?.legend;
-    ladderMaster[ladderMaster.length - 1].min = threshold?.mr;
-    ladderMaster[ladderMaster.length - 1].timestamp = threshold?.timestamp;
+    setApexTiers(allMatches?.thresholds?.legend);
     start();
   }
 };
 
 const start = async() => {
-  if(isApexReady && matches.length > 0){
-    allData = formatData1();
-    userDatasets = formatData2(allData);
-    userDatasets.forEach((u, i) => {
-      if(u.data.length > maxLength)
-        maxLength = u.data.length;
-    });
-    initChart();
-    allData.sort((a, b) => b.timestamp - a.timestamp);
-    await initCards(allData);
-  }
+  allData = formatData1();
+  formatDatasets();
+  if(currentSort.type === 's10')
+    onClickTab('lpTab', 'lpGraph', 'lp');
+  else
+    onClickTab('mrTab', 'mrGraph', 'mr')
+  initChart(graphs.find(g => g.type === 'lp'), 'lpGraph');
+  let mrGraph = graphs.find(g => g.type === 'mr');
+  if(mrGraph.maxLength > 0)
+    initChart(mrGraph, 'mrGraph');
+  allData.sort((a, b) => b.timestamp - a.timestamp);
+  await initCards(allData);
 };
 
 const createRanksDiv = (start, end, isMaster, parentDiv) => {
   let points = 'LP';
-  let ladderArray = ladder;
+  let ladderArray = ladderLeaguePoint;
   let tiersArray = tiers;
   if(isMaster) {
     points = 'MR';
@@ -649,29 +631,43 @@ const initCards = async(allData) => {
         <span class="tooltipPopupCharacterText">${d.vsCharacter}</span>
       </div>
     `;
-    let twTierColor = textColors[d.newTier?.toLowerCase()];
-    let twVsTierColor = textColors[d.vsTier?.toLowerCase()];
+    let twLpTierColor = tiersColor.find(t => t.name === d.newTier);
+    let twMrTierColor = tiersColor.find(t => t.name === d.newMrTier);
+    let twVsLpTierColor = tiersColor.find(t => t.name === d.vsTier);
+    let twVsMrTierColor = tiersColor.find(t => t.name === d.vsMrTier);
+    if(d.newMrLp) {
+      twLpTierColor = twLpTierColor?.colorTextFaded || colors.defaultColorTextFaded;
+      twMrTierColor = twMrTierColor?.colorText || colors.defaultColorText;
+      twVsLpTierColor = twVsLpTierColor?.colorTextFaded || colors.defaultColorTextFaded;
+      twVsMrTierColor = twVsMrTierColor?.colorText || colors.defaultColorText;
+    } else {
+      twLpTierColor = twLpTierColor?.colorText || colors.defaultColorText;
+      twMrTierColor = twMrTierColor?.colorTextFaded || colors.defaultColorTextFaded;
+      twVsLpTierColor = twVsLpTierColor?.colorText || colors.defaultColorText;
+      twVsMrTierColor = twVsMrTierColor?.colorTextFaded || colors.defaultColorTextFaded;
+    }
+    
     let lp = `
-      <span class="text-[10px] mr-[2px] ${twTierColor}">${d.newSymbol ? d.newSymbol : ''}${d.newDivision ? d.newDivision : ''}</span>
-      <span class="mr-[2px] ${twTierColor}">${d.newLp ? d.newLp : '?'}</span>
-      <span class="text-[10px] mr-[3px] ${twTierColor}">LP</span>
-      <span class="text-[12px] ${twTierColor}">${lpDiff}</span>
+      <span class="text-[10px] mr-[2px]" style="color:${twLpTierColor}">${d.newSymbol ? d.newSymbol : ''}${d.newDivision ? d.newDivision : ''}</span>
+      <span class="mr-[2px]" style="color:${twLpTierColor}">${d.newLp ? d.newLp : '?'}</span>
+      <span class="text-[10px] mr-[3px]" style="color:${twLpTierColor}">LP</span>
+      <span class="text-[12px]" style="color:${twLpTierColor}">${lpDiff}</span>
     `;
     let mr = `
-      <span class="text-[10px] mr-[2px]">${d.newMrSymbol ? d.newMrSymbol : ''}${d.newMrDivision ? d.newMrDivision : ''}</span>
-      <span class="mr-[2px]">${d.newMrLp != null ? d.newMrLp : '?'}</span>
-      <span class="text-[10px] mr-[3px]">MR</span>
-      <span class="text-[12px]">${mrLpDiff}</span>
+      <span class="text-[10px] mr-[2px]" style="color:${twMrTierColor}">${d.newMrSymbol ? d.newMrSymbol : ''}${d.newMrDivision ? d.newMrDivision : ''}</span>
+      <span class="mr-[2px]" style="color:${twMrTierColor}">${d.newMrLp != null ? d.newMrLp : '?'}</span>
+      <span class="text-[10px] mr-[3px]" style="color:${twMrTierColor}">MR</span>
+      <span class="text-[12px]" style="color:${twMrTierColor}">${mrLpDiff}</span>
     `;
     let vsLp = `
-      <span class="text-[10px] ${twVsTierColor}">${d.vsSymbol ? d.vsSymbol : ''}${d.vsDivision ? d.vsDivision : ''}</span>
-      <span class="ml-[2px] ${twVsTierColor}">${d.vsLp ? d.vsLp : '?'}</span>
-      <span class="text-[10px] ml-[2px] ${twVsTierColor}">LP</span>
+      <span class="text-[10px]" style="color:${twVsLpTierColor}">${d.vsSymbol ? d.vsSymbol : ''}${d.vsDivision ? d.vsDivision : ''}</span>
+      <span class="ml-[2px]" style="color:${twVsLpTierColor}">${d.vsLp ? d.vsLp : '?'}</span>
+      <span class="text-[10px] ml-[2px]" style="color:${twVsLpTierColor}">LP</span>
     `;
     let vsMr = `
-      <span class="text-[10px]">${d.vsMrSymbol ? d.vsMrSymbol : ''}${d.vsMrDivision ? d.vsMrDivision : ''}</span>
-      <span class="ml-[2px]">${d.vsMrLp != null ? d.vsMrLp : '?'}</span>
-      <span class="text-[10px] ml-[2px]">MR</span>
+      <span class="text-[10px]" style="color:${twVsMrTierColor}">${d.vsMrSymbol ? d.vsMrSymbol : ''}${d.vsMrDivision ? d.vsMrDivision : ''}</span>
+      <span class="ml-[2px]" style="color:${twVsMrTierColor}">${d.vsMrLp != null ? d.vsMrLp : '?'}</span>
+      <span class="text-[10px] ml-[2px]" style="color:${twVsMrTierColor}">MR</span>
     `;
     let rounds = '';
     for(let i = 0; i < d.rounds.length; i++) {
@@ -717,13 +713,13 @@ const initCards = async(allData) => {
           <div class="flex flex-col justify-center items-center">${character}</div>
         </div>
         <div class="flex flex-col justify-center items-start grow ml-[4px]">
-          <div class="pt-[4px] flex items-baseline">${lp}</div>
-          <div class=" flex items-baseline">${mr}</div>
+          <div class="pt-[4px] flex items-baseline">${d.newMrLp === 0 ? lp : mr}</div>
+          <div class=" flex items-baseline">${d.newMrLp === 0 ? mr : lp}</div>
           <div class=" flex mt-[4px]">${rounds}</div>
         </div>
         <div class="flex flex-col justify-center items-end grow mr-[4px]">
-          <div class="pt-[4px] flex items-baseline">${vsLp}</div>
-          <div class=" flex items-baseline">${vsMr}</div>
+          <div class="pt-[4px] flex items-baseline">${d.newMrLp === 0 ? vsLp : vsMr}</div>
+          <div class=" flex items-baseline">${d.newMrLp === 0 ? vsMr : vsLp}</div>
           <div class="flex mt-[4px]">${vsRounds}</div>
         </div>
         <div class="flex justify-end items-center">
@@ -733,7 +729,7 @@ const initCards = async(allData) => {
     `;
     newEl.addEventListener('mouseenter', event => {
       newEl.classList.add(hoverClassName);
-      userDatasets.forEach(dataset => {
+      currentGraph.userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => {
           if(ctx.p1.raw.replayId === d.replayId)
             return ctx.p1.raw.colorHover;
@@ -759,7 +755,7 @@ const initCards = async(allData) => {
     });
     newEl.addEventListener('mouseleave', event => {
       newEl.classList.remove(hoverClassName);
-      userDatasets.forEach(dataset => {
+      currentGraph.userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => ctx.p1.raw.color;
         dataset.pointBackgroundColor = dataset.data.map(data => data.color);
       });
@@ -782,7 +778,7 @@ const initCards = async(allData) => {
   }, 100);
   
   gameCards.addEventListener('mouseleave', event => {
-    userDatasets.forEach(dataset => {
+    currentGraph.userDatasets.forEach(dataset => {
       if(dataset.order !== dataset.defaultOrder) {
         dataset.order = dataset.defaultOrder;
         dataset.type = 'line';
@@ -799,7 +795,7 @@ const updateGraphIfNoOtherRequest = () => {
   const currentUpdateNb = numberOfUpdates;
   setTimeout(() => {
     if(numberOfUpdates === currentUpdateNb){
-      stackedLine.update();
+      currentGraph.chart.update();
     }
   }, 30);
 };
@@ -846,9 +842,9 @@ const setSessionDiv = (session) => {
       <span>${(wins / (wins + losses) * 100).toFixed(1)}</span>
       <span class="my-0 ml-[2px] text-[14px] font-normal opacity-80">%</span>
       <span class="my-0 mx-[8px] text-[14px] font-normal opacity-40">&mdash;</span>
-      <span class="my-0 text-[14px] font-normal">${mr === 0 ? lpSign : mrSign}</span>
-      <span class="ml-[2px]">${Math.abs(mr === 0 ? lp : mr)}</span>
-      <span class="my-0 ml-[4px] text-[14px] font-normal opacity-80">${mr === 0 ? 'LP' : 'MR'}</span>
+      <span class="my-0 text-[14px] font-normal">${currentGraph.type === 'lp' ? lpSign : mrSign}</span>
+      <span class="ml-[2px]">${Math.abs(currentGraph.type === 'lp' ? lp : mr)}</span>
+      <span class="my-0 ml-[4px] text-[14px] font-normal opacity-80">${currentGraph.type === 'lp' ? 'LP' : 'MR'}</span>
     </div>
   `;
 };
@@ -868,9 +864,9 @@ const formatData1 = () => {
     if(!nextGame)
       nextGame = lps.find(l => l.fighter_id === g.fighter_id && l.character_id === g.character_id);
     
-    let newTier = ladder.find(l => l.id === nextGame.league_rank);
+    let newTier = ladderLeaguePoint.find(l => l.id === nextGame.league_rank);
     let newMrTier = ladderMaster.find(l => l.id === nextGame.master_rank);
-    let vsTier = ladder.find(l => l.id === g.vs_league_rank);
+    let vsTier = ladderLeaguePoint.find(l => l.id === g.vs_league_rank);
     let vsMrTier = ladderMaster.find(l => l.id === g.vs_master_rank);
     let lpDiff = nextGame.league_point - g.league_point;
     let mrLpDiff = nextGame.master_rating - g.master_rating;
@@ -992,6 +988,7 @@ const formatData1 = () => {
       session.details[label].mrGained += d.mrLpDiff;
     }
   });
+  matches = null;
   return allData;
 };
 
@@ -1039,10 +1036,11 @@ const addDataToCInfo = (cInfo, g, lpDiff, mrLpDiff) => {
   cInfo.totalMrLp += mrLpDiff;
 };
 
-const formatData2 = (allData) => {
-  let newUserDatasets = [];
+const formatDatasets = () => {
+  let userLpDatasets = [];
+  let userMrDatasets = [];
   let summoners = [];
-  matches.forEach((m, mIndex) => {
+  allData.forEach((m, mIndex) => {
     const currentSummoner = summoners.find(s => s.character === m.character && s.fighter === m.fighter);
     if(currentSummoner)
       currentSummoner.lastIndex = mIndex;
@@ -1066,19 +1064,21 @@ const formatData2 = (allData) => {
   summoners.forEach((s, sIndex) => {
     let summoner_graph = summonersInfo[s.label];
     if(!summoner_graph) {
-      summonersInfo[s.label] = {minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.label] ? true : false};
+      summonersInfo[s.label] = {lp: {minY: 999999, maxY: 0, nbGame: 0}, mr: {minY: 999999, maxY: 0, nbGame: 0}, hidden: curvesHiddenVisibility[s.label] ? true : false};
       summoner_graph = summonersInfo[s.label];
     }
     
-    let playerData = [];
-    let counter = 1;
+    let playerDataLp = [];
+    let playerDataMr = [];
+    let lpCounter = 1;
+    let mrCounter = 1;
     allData.forEach((g, i) => {
       let uniqueSummoner = formatName(g.fighter, g.character);
       if(uniqueSummoner === s.label) {
         let lpWithoutPlacement = g.newLp === -1 ? g.placementLp : g.newLp;
         
-        if(playerData.length === 0) {
-          playerData.push({
+        if(playerDataLp.length === 0) {
+          playerDataLp.push({
             x: 0,
             color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
             colorHover: curvesColors[sIndex].colorHover,
@@ -1088,38 +1088,70 @@ const formatData2 = (allData) => {
           });
         }
         
-        summoner_graph.nbGame = counter;
-        if(lpWithoutPlacement < summoner_graph.minY)
-          summoner_graph.minY = lpWithoutPlacement;
-        if(lpWithoutPlacement > summoner_graph.maxY)
-          summoner_graph.maxY = lpWithoutPlacement;
+        summoner_graph.lp.nbGame = lpCounter;
+        if(lpWithoutPlacement < summoner_graph.lp.minY)
+          summoner_graph.lp.minY = lpWithoutPlacement;
+        if(lpWithoutPlacement > summoner_graph.lp.maxY)
+          summoner_graph.lp.maxY = lpWithoutPlacement;
         
-        playerData.push({
-          x: counter,
+        playerDataLp.push({
+          x: lpCounter,
           color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
           colorHover: curvesColors[sIndex].colorHover,
           ...g,
           y: lpWithoutPlacement,
         });
-        counter++;
+        lpCounter++;
+        
+        
+        
+        if(playerDataMr.length !== 0 || g.newMrLp !== 0) {
+          let mrWithoutPlacement = g.newMrLp === -1 ? g.placementMrLp : g.newMrLp;
+          
+          if(playerDataMr.length === 0) {
+            playerDataMr.push({
+              x: 0,
+              color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
+              colorHover: curvesColors[sIndex].colorHover,
+              ...g,
+              y: mrWithoutPlacement,
+              replayId: getUniqueCounter(),
+            });
+          }
+          
+          summoner_graph.mr.nbGame = mrCounter;
+          if(mrWithoutPlacement < summoner_graph.mr.minY)
+            summoner_graph.mr.minY = mrWithoutPlacement;
+          if(mrWithoutPlacement > summoner_graph.mr.maxY)
+            summoner_graph.mr.maxY = mrWithoutPlacement;
+          
+          playerDataMr.push({
+            x: mrCounter,
+            color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
+            colorHover: curvesColors[sIndex].colorHover,
+            ...g,
+            y: mrWithoutPlacement,
+          });
+          mrCounter++;
+        }
       }
     });
     
-    newUserDatasets.push({
+    userLpDatasets.push({
       type: 'line',
       label: s.label,
-      data: playerData,
+      data: playerDataLp,
       fill: false,
-      pointRadius: playerData.map((p, i) => i === 0 ? 0 : 4),
-      pointHoverRadius: playerData.map((p, i) => i === 0 ? 0 : 6),
-      pointHitRadius: 5,
+      pointRadius: playerDataLp.map((p, i) => i === 0 ? 0 : 4),
+      pointHoverRadius: playerDataLp.map((p, i) => i === 0 ? 0 : 6),
+      pointHitRadius: (data) => data.index === 0 ? 0 : 5,
       pointBorderWidth: 0,
       pointHoverBackgroundColor: curvesColors[sIndex].colorHover,
       pointHoverBorderWidth: 0,
-      pointBackgroundColor: playerData.map((p, i) => p.color),
+      pointBackgroundColor: playerDataLp.map((p, i) => p.color),
       segment: {
-        borderColor: ctx => playerData[ctx.p1DataIndex].color,
-        borderDash: ctx => playerData[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
+        borderColor: ctx => playerDataLp[ctx.p1DataIndex].color,
+        borderDash: ctx => playerDataLp[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
       },
       order: s.order,
       hidden: summonersInfo[s.label].hidden ? true : false,
@@ -1127,22 +1159,144 @@ const formatData2 = (allData) => {
       //custom prop
       defaultOrder: s.order,
       defaultColor: curvesColors[sIndex].colorLight,
+      identifier: 'user',
+    });
+    userMrDatasets.push({
+      type: 'line',
+      label: s.label,
+      data: playerDataMr,
+      fill: false,
+      pointRadius: playerDataMr.map((p, i) => i === 0 ? 0 : 4),
+      pointHoverRadius: playerDataMr.map((p, i) => i === 0 ? 0 : 6),
+      pointHitRadius: (data) => data.index === 0 ? 0 : 5,
+      pointBorderWidth: 0,
+      pointHoverBackgroundColor: curvesColors[sIndex].colorHover,
+      pointHoverBorderWidth: 0,
+      pointBackgroundColor: playerDataMr.map((p, i) => p.color),
+      segment: {
+        borderColor: ctx => playerDataMr[ctx.p1DataIndex].color,
+        borderDash: ctx => playerDataMr[ctx.p1DataIndex].outcome >= 2 ? [2, 1] : undefined,
+      },
+      order: s.order,
+      hidden: summonersInfo[s.label].hidden ? true : false,
+      
+      //custom prop
+      defaultOrder: s.order,
+      defaultColor: curvesColors[sIndex].colorLight,
+      identifier: 'user',
     });
   });
   
   const visibleData = filterHidden(summonersInfo);
-
-  minY = Math.min(...visibleData.map(item => item[1].minY));
-  maxY = Math.max(...visibleData.map(item => item[1].maxY));
-  maxX = Math.max(...visibleData.map(item => item[1].nbGame));
-  staticMaxX = maxX;
-  minY = Math.floor((minY - yMargin) / 100) * 100;
-  maxY = Math.ceil((maxY + yMargin) / 100) * 100;
-  setTicksStep(maxX);
-  return newUserDatasets;
+  
+  const lpMaxLength = Math.max(...userLpDatasets.map(item => item.data.length));
+  const yLpMarginBottom = 200;
+  const yLpMarginTop = 200;
+  const lpMinY = Math.floor((Math.min(...visibleData.map(item => item[1].lp.minY)) - yLpMarginBottom) / 100) * 100;
+  const lpMaxY = Math.ceil((Math.max(...visibleData.map(item => item[1].lp.maxY)) + yLpMarginTop) / 100) * 100;
+  const lpMaxX = Math.max(...visibleData.map(item => item[1].lp.nbGame));
+  const yTicksLp = [];
+  ladderLeaguePoint.forEach(l => {
+    yTicksLp.push({value: l.min});
+    if(l.tier === 'Platinum' || l.tier === 'Diamond')
+      yTicksLp.push({value: l.min + 600});
+  });
+  graphs.push({
+    type: 'lp',
+    userDatasets: userLpDatasets,
+    tierDatasets: createTierDatasets(lpMaxLength, ladderLeaguePoint),
+    maxLength: lpMaxLength,
+    yTicks: yTicksLp,
+    xTicksStep: getTicksStep(lpMaxX),
+    minY: lpMinY,
+    maxY: lpMaxY,
+    maxX: lpMaxX,
+    defaultMaxX: lpMaxX,
+    yMarginBottom: yLpMarginBottom,
+    yMarginTop: yLpMarginTop,
+    chart: null,
+    colorCallback: (tick) => colorCallback(tick, ladderLeaguePoint),
+    tickCallback: (value, index, tick) => tickCallback(value, ladderLeaguePoint, lpMinY, lpMaxY),
+    gridColorCallback: (tick) => gridColorCallback(tick, ladderLeaguePoint, lpMinY, lpMaxY),
+  });
+  
+  const mrMaxLength = Math.max(...userMrDatasets.map(item => item.data.length));
+  const yMrMarginBottom = 100;
+  const yMrMarginTop = 300;
+  const mrMinY = Math.floor((Math.min(...visibleData.map(item => item[1].mr.minY)) - yMrMarginBottom) / 100) * 100;
+  const mrMaxY = Math.ceil((Math.max(...visibleData.map(item => item[1].mr.maxY)) + yMrMarginTop) / 100) * 100;
+  const mrMaxX = Math.max(...visibleData.map(item => item[1].mr.nbGame));
+  const yTicksMr = [];
+  const legendMin = ladderMaster.find(l => l.tier === 'Legend')?.min;
+  for(let i = 1000; i <= 2600; i += 50) {
+    yTicksMr.push({value: i});
+    if(legendMin > i && legendMin < i + 50)
+      yTicksMr.push({value: legendMin});
+  }
+  graphs.push({
+    type: 'mr',
+    userDatasets: userMrDatasets,
+    tierDatasets: createTierDatasets(mrMaxLength, ladderMaster),
+    maxLength: mrMaxLength,
+    yTicks: yTicksMr,
+    xTicksStep: getTicksStep(mrMaxX),
+    minY: mrMinY,
+    maxY: mrMaxY,
+    maxX: mrMaxX,
+    defaultMaxX: mrMaxX,
+    yMarginBottom: yMrMarginBottom,
+    yMarginTop: yMrMarginTop,
+    chart: null,
+    colorCallback: (tick) => colorCallback(tick, ladderMaster),
+    tickCallback: (value, index, tick) => tickCallback(value, ladderMaster, mrMinY, mrMaxY),
+    gridColorCallback: (tick) => gridColorCallback(tick, ladderMaster, mrMinY, mrMaxY),
+  });
 };
 
 const filterHidden = (obj) => Object.entries(obj).filter(([key, value]) => !value.hidden);
+
+const colorCallback = (tick, ladder) => {
+  const found = ladder.find(l => tick.tick.value >= l.min && tick.tick.value < l.max);
+  return found && found.colorText ? found.colorText : 'rgb(200, 200, 200)';
+};
+
+const tickCallback = (value, ladder, minY, maxY) => {
+  const found = ladder.find(l => value === l.min);
+  if(!found || value < minY || value > maxY)
+    return '';
+  if(found.division)
+    return found.tier + ' ' + found.division;
+  else
+    return [...found.tier.split(' '), found.min];
+};
+
+const gridColorCallback = (tick, ladder, minY, maxY) => {
+  const found = ladder.find(l => tick.tick.value >= l.min && tick.tick.value < l.max);
+  const color = found && found.colorGrid ? found.colorGrid : 'rgba(200, 200, 200, 0.08)';
+  return tick.tick.value >= minY && tick.tick.value <= maxY ? color : '';
+};
+
+const createTierDatasets = (maxLength, ladder) => {
+  const lastRank = ladder[ladder.length - 1];
+  let tierDatasets = [];
+  ladder.forEach(l => {
+    tierDatasets.push({
+      label: l.tier,
+      data: [
+        {x: 0, y: l === lastRank ? l.min : l.max},
+        {x: maxLength, y: l === lastRank ? l.min : l.max},
+      ],
+      fill: l === ladder[0] ? 'start' : (l === lastRank ? 'end' : '-1'),
+      borderColor: 'rgba(0, 0, 0, 0)',
+      backgroundColor: (context) => l.color,
+      pointRadius: 0,
+      pointHitRadius: 0,
+      order: 100,
+      identifier: 'tier',
+    });
+  });
+  return tierDatasets;
+};
 
 class ShadowLine extends Chart.LineController {
   draw() {
@@ -1163,40 +1317,13 @@ ShadowLine.id = 'shadowLine';
 ShadowLine.defaults = Chart.LineController.defaults;
 Chart.register(ShadowLine);
 
-let stackedLine;
-const initChart = () => {
-  if(stackedLine) {
-    stackedLine?.destroy();
-  }
-  
-  let tierDatasets = [];
-  ladder.forEach(o => {
-    if(o.division === "5") {
-      tierDatasets.push({
-        label: o.tier,
-        data: [
-          {x: 0, y: o.max},
-          {x: maxLength, y: o.max},
-        ],
-        fill: o.tier === "Rookie" ? 'start' : '-1',
-        borderColor: 'rgba(0, 0, 0, 0)',
-        backgroundColor: (context) => {
-          return o.color;
-        },
-        pointRadius: 0,
-        showTooltips: false,
-        order: 100,
-      });
-    }
-  });
-
-
+const initChart = (graph, canvasElement) => {
   const data = {
-    datasets: [...userDatasets, ...tierDatasets]
+    datasets: [...graph.userDatasets, ...graph.tierDatasets]
   };
   
   Chart.defaults.color = 'rgb(200, 200, 200)';
-  stackedLine = new Chart(document.getElementById('eloGraph'), {
+  graph.chart = new Chart(document.getElementById(canvasElement), {
       type: 'line',
       data: data,
       options: {
@@ -1210,33 +1337,21 @@ const initChart = () => {
             axis: 'y',
             type: 'linear',
             beginAtZero: false,
-            min: minY,
-            max: maxY,
+            min: graph.minY,
+            max: graph.maxY,
             display: true,
             afterBuildTicks: (axis) => {
-              axis.ticks = yTicks;
+              axis.ticks = graph.yTicks;
             },
             ticks: {
               offset: false,
               autoSkip: false,
               includeBounds: false,
-              color: (tick) => {
-                let found = ladder.find(l => tick.tick.value >= l.min && tick.tick.value < l.max);
-                return found && found.colorText ? found.colorText : 'rgb(200, 200, 200)';
-              },
-              callback: function(value, index, ticks) {
-                let l = ladder.find(o => value === o.min);
-                if(!l || value < minY || value > maxY)
-                  return '';
-                return l.tier + ' ' + l.division;
-              },
+              color: graph.colorCallback,
+              callback: graph.tickCallback,
             },
             grid: {
-              color: (tick) => {
-                let found = ladder.find(l => tick.tick.value >= l.min && tick.tick.value < l.max);
-                let color = found && found.colorGrid ? found.colorGrid : 'rgba(200, 200, 200, 0.08)';
-                return tick.tick.value >= minY && tick.tick.value <= maxY ? color : '';
-              },
+              color: graph.gridColorCallback,
               tickBorderDash: [5, 5],
               z: 1
             },
@@ -1250,14 +1365,14 @@ const initChart = () => {
             type: 'linear',
             beginAtZero: true,
             min: 0,
-            max: maxX + 1,
+            max: graph.maxX + 1,
             ticks: {
               offset: true,
-              stepSize: xTicksStep,
+              stepSize: graph.xTicksStep,
               autoSkip: true,
               includeBounds: false,
               callback: function(value, index, ticks) {
-                if(value % xTicksStep === 0) {
+                if(value % graph.xTicksStep === 0) {
                   return value;
                 }
               },
@@ -1294,20 +1409,18 @@ const initChart = () => {
             let raw = elements[0].element.raw;
             allData.forEach(currentGame => {
               if(currentGame.replayId === raw.replayId) {
-                if(!isScrolling) {
-                  switch(currentGame.outcome) {
-                    case 1:
-                      currentGame.element.classList.remove('win');
-                      currentGame.element.classList.add('winHover');
-                      break;
-                    case 0:
-                      currentGame.element.classList.remove('lose');
-                      currentGame.element.classList.add('loseHover');
-                      break;
-                    default:
-                      currentGame.element.classList.remove('remake');
-                      currentGame.element.classList.add('remakeHover');
-                  }
+                switch(currentGame.outcome) {
+                  case 1:
+                    currentGame.element.classList.remove('win');
+                    currentGame.element.classList.add('winHover');
+                    break;
+                  case 0:
+                    currentGame.element.classList.remove('lose');
+                    currentGame.element.classList.add('loseHover');
+                    break;
+                  default:
+                    currentGame.element.classList.remove('remake');
+                    currentGame.element.classList.add('remakeHover');
                 }
               } else {
                 switch(currentGame.outcome) {
@@ -1350,7 +1463,7 @@ const initChart = () => {
               }
             });
           }
-          stackedLine.update();
+          graph.chart.update();
         },
         layout: {
           padding: {
@@ -1365,7 +1478,7 @@ const initChart = () => {
             labels: {
               generateLabels: function(chart) {
                 let labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                labels.forEach(label => label.datasetIndex < userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
+                labels.forEach(label => label.datasetIndex < graph.userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
                 return labels;
               },
               filter: (item, chartData) => !tiersColor.some(t => t.name === item.text),
@@ -1393,36 +1506,9 @@ const initChart = () => {
                 summoner_graph.hidden = false;
               }
               
-              userDatasets.forEach(dataset => {
+              graph.userDatasets.forEach(dataset => {
                 if(dataset.label === legendItem.text) {
                   dataset.hidden = ci.isDatasetVisible(index);
-                }
-              });
-              
-              const visibleData = filterHidden(summonersInfo);
-
-              minY = Math.min(...visibleData.map(item => item[1].minY));
-              maxY = Math.max(...visibleData.map(item => item[1].maxY));
-              maxX = Math.max(...visibleData.map(item => item[1].nbGame));
-              minY = Math.floor((minY - yMargin) / 100) * 100;
-              maxY = Math.ceil((maxY + yMargin) / 100) * 100;
-              setTicksStep(maxX);
-
-              stackedLine.options.scales.y.min= minY;
-              stackedLine.options.scales.y.max = maxY;
-              stackedLine.options.scales.x.max = maxX + 1;
-              stackedLine.options.scales.x.ticks.stepSize = xTicksStep;
-              stackedLine.update();
-
-              allData.forEach(d => {
-                if(formatName(d.fighter, d.character) === legendItem.text) {
-                  if(legendItem.hidden){
-                    d.element.classList.remove('!flex');
-                    d.element.classList.add('!hidden');
-                  } else {
-                    d.element.classList.remove('!hidden');
-                    d.element.classList.add('!flex');
-                  }
                 }
               });
               
@@ -1434,7 +1520,8 @@ const initChart = () => {
                     s.notHiddenSummoners.push(legendItem.text);
                 }
               });
-              refreshSessions(legendItem.text);
+              showVsFighter();
+              setBounds(graph);
               
               let curvesHiddenVisibility = localStorage.getItem("curves-hidden-visibility");
               let newCurvesHiddenVisibility = curvesHiddenVisibility ? {...JSON.parse(curvesHiddenVisibility), [legendItem.text]: legendItem.hidden} : {[legendItem.text]: legendItem.hidden};
@@ -1468,28 +1555,54 @@ const initChart = () => {
                 const tooltipChampion = tooltipModel.dataPoints[0].raw.character;
                 const tooltipChampionId = tooltipModel.dataPoints[0].raw.characterId;
                 const tooltipLane = tooltipModel.dataPoints[0].raw.battleInputType;
-                const tooltipTier = tooltipModel.dataPoints[0].raw.newTier;
-                const tooltipSymbol = tooltipModel.dataPoints[0].raw.newSymbol;
-                const tooltipDivision = tooltipModel.dataPoints[0].raw.newDivision;
-                const tooltipLp = tooltipModel.dataPoints[0].raw.newLp;
-                const tooltipLpDiff = tooltipModel.dataPoints[0].raw.lpDiff;
+                let tooltipTier = null;
+                let tooltipSymbol = null;
+                let tooltipDivision = null;
+                let tooltipLp = '?';
+                let tooltipLpDiff = '';
+                const tooltipVsLane = tooltipModel.dataPoints[0].raw.vsBattleInputType;
+                let tooltipVsTier = null;
+                let tooltipVsSymbol = null;
+                let tooltipVsDivision = null;
+                let tooltipVsLp = '?';
+                if(graph.type === 'lp' && tooltipModel.dataPoints[0].raw.newLp) {
+                  tooltipTier = tooltipModel.dataPoints[0].raw.newTier;
+                  tooltipSymbol = tooltipModel.dataPoints[0].raw.newSymbol;
+                  tooltipDivision = tooltipModel.dataPoints[0].raw.newDivision;
+                  tooltipLp = tooltipModel.dataPoints[0].raw.newLp + ' LP';
+                  tooltipLpDiff = tooltipModel.dataPoints[0].raw.lpDiff;
+                  
+                  tooltipVsTier = tooltipModel.dataPoints[0].raw.vsTier;
+                  tooltipVsSymbol = tooltipModel.dataPoints[0].raw.vsSymbol;
+                  tooltipVsDivision = tooltipModel.dataPoints[0].raw.vsDivision;
+                  tooltipVsLp = tooltipModel.dataPoints[0].raw.vsLp + ' LP';
+                } else if(graph.type === 'mr' && tooltipModel.dataPoints[0].raw.newMrLp) {
+                  tooltipTier = tooltipModel.dataPoints[0].raw.newMrTier;
+                  tooltipSymbol = tooltipModel.dataPoints[0].raw.newMrSymbol;
+                  tooltipDivision = tooltipModel.dataPoints[0].raw.newMrDivision;
+                  tooltipLp = tooltipModel.dataPoints[0].raw.newMrLp + ' MR';
+                  tooltipLpDiff = tooltipModel.dataPoints[0].raw.mrLpDiff;
+                  
+                  tooltipVsTier = tooltipModel.dataPoints[0].raw.vsMrTier;
+                  tooltipVsSymbol = tooltipModel.dataPoints[0].raw.vsMrSymbol;
+                  tooltipVsDivision = tooltipModel.dataPoints[0].raw.vsMrDivision;
+                  tooltipVsLp = tooltipModel.dataPoints[0].raw.vsMrLp + ' MR';
+                }
                 
                 const tooltipVsChampion = tooltipModel.dataPoints[0].raw.vsCharacter;
                 const tooltipVsChampionId = tooltipModel.dataPoints[0].raw.vsCharacterId;
-                const tooltipVsLane = tooltipModel.dataPoints[0].raw.vsBattleInputType;
-                const tooltipVsTier = tooltipModel.dataPoints[0].raw.vsTier;
-                const tooltipVsSymbol = tooltipModel.dataPoints[0].raw.vsSymbol;
-                const tooltipVsDivision = tooltipModel.dataPoints[0].raw.vsDivision;
-                const tooltipVsLp = tooltipModel.dataPoints[0].raw.vsLp;
+                
                 
                 let bgColor = 'bg-[#323232cc]';
                 let borderColor = 'border-[#5c5c5c]';
                 if(tooltipOutcome === 1) {
                   bgColor = 'bg-[#30324bcc]';
                   borderColor = 'border-[#5260e3]';
+                  tooltipLpDiff = `(+${tooltipLpDiff})`;
                 } else if(tooltipOutcome === 0) {
                   bgColor = 'bg-[#4c3232cc]';
                   borderColor = 'border-[#e85f5f]';
+                  tooltipLpDiff = tooltipLpDiff === 0 ? `(-${tooltipLpDiff})` : `(${tooltipLpDiff})`;
                 }
                 
                 const tooltipR = tooltipModel.dataPoints[0].raw.rounds;
@@ -1504,7 +1617,7 @@ const initChart = () => {
                 }
                 
                 let displayedLp = `
-                  <div class="mr-[20px] ${textColors[tooltipTier?.toLowerCase()]}"><span>${tooltipSymbol || ''}${tooltipDivision || ''}</span> ${tooltipLp || '?'} LP</div>
+                  <div class="mr-[20px] ${textColors[tooltipTier?.toLowerCase()]}"><span>${tooltipSymbol || ''}${tooltipDivision || ''}</span> ${tooltipLp} ${tooltipLp === '?' ? '' : tooltipLpDiff}</div>
                 `;
                 let displayChampion = `
                   <img class="h-[20px] max-w-none" src="assets/characters/character_${tooltipChampionId}_l.png" alt="${tooltipChampion}" />
@@ -1512,7 +1625,7 @@ const initChart = () => {
                 `;
                 
                 let displayedVsLp = `
-                  <div class="mr-[20px] ${textColors[tooltipVsTier?.toLowerCase()]}"><span>${tooltipVsSymbol || ''}${tooltipVsDivision || ''}</span> ${tooltipVsLp || '?'} LP</div>
+                  <div class="mr-[20px] ${textColors[tooltipVsTier?.toLowerCase()]}"><span>${tooltipVsSymbol || ''}${tooltipVsDivision || ''}</span> ${tooltipVsLp}</div>
                 `;
                 let displayVsChampion = `
                   <img class="h-[20px] max-w-none" src="assets/characters/character_${tooltipVsChampionId}_r.png" alt="${tooltipVsChampion}" />
@@ -1548,5 +1661,4 @@ const initChart = () => {
         },
       }
   });
-
 };
