@@ -45,21 +45,16 @@
     <div id="window" class="flex justify-center items-center p-[20px] rounded-[6px] bg-[#282828]"></div>
   </div>
 	<div id="container" class="flex flex-nowrap w-full h-full">
-    <div class="grow h-screen">
-      <div class="flex flex-col w-full h-full">
+    <div class="grow h-screen relative">
+      <div class="flex flex-col h-full fixed" style="width: calc(100% - 370px)">
         <div id="tabs" class="flex pt-[10px] pl-[10px]">
           <div id="lpTab" class="flex justify-center items-center cursor-pointer mr-[10px] px-[14px] py-[6px] text-[14px] rounded-[6px] border-2 border-[#3c3c3c] box-border">League Points</div>
           <div id="mrTab" class="flex justify-center items-center cursor-pointer mr-[10px] px-[14px] py-[6px] text-[14px] rounded-[6px] border-2 border-[#3c3c3c] box-border">Master Rating</div>
         </div>
-        <div id="graphs" class="relative w-full h-full">
-          <div id="lpGraph" class="absolute w-full h-full hidden">
-            <canvas id="eloGraph" class="w-full h-full fixed"></canvas>
-          </div>
-          <div id="mrGraph" class="absolute w-full h-full hidden">
-            <canvas id="eloGraph2" class="w-full h-full fixed"></canvas>
-          </div>
+        <div id="graphs" class="w-full h-full relative">
+          <canvas id="lpGraph" class="w-full h-full absolute"></canvas>
+          <canvas id="mrGraph" class="w-full h-full absolute"></canvas>
         </div>
-        
       </div>
     </div>
     <div class="w-[330px] flex flex-col flex-nowrap m-[20px] overflow-hidden">
