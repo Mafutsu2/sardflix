@@ -1,5 +1,6 @@
 let sorts = [];
 const sortsSeasons = [
+  {type: 's16', name: 'Season 16'},
   {type: 's15', name: 'Season 15'},
   {type: 's14-3', name: 'Season 14 - Split 3'},
   {type: 's14-2', name: 'Season 14 - Split 2'},

@@ -319,7 +319,7 @@ const getLps = async(season) => {
 };
 
 const start = async(season) => {
-  if(isApexReady && matches.length > 0 && lps.length > 0){
+  if(isApexReady && matches.length > 0 && lps.length > 0) {
     const isOldSeason = ['s14-2', 's14-1', 's13-2', 's13-1', 's12', 's11', 's10', 's9', 's8'].includes(season);
     allData = formatData1(isOldSeason);
     userDatasets = formatData2(allData);
@@ -510,10 +510,9 @@ const initCards = (allData, champInfo, versions) => {
     
     if(index > initialLoad)
       fragment2.appendChild(newEl);
-    else if(index < initialLoad)
+    else
       fragment1.appendChild(newEl);
-    else {
-      fragment1.appendChild(newEl);
+    if(index === initialLoad || index === allData.length - 1) {
       gameCards.appendChild(fragment1);
     }
     d.element = newEl;
