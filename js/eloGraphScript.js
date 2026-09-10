@@ -360,17 +360,27 @@ const initCards = (allData, champInfo, versions) => {
     let lpDiff = '';
     let position = '';
     let hoverClassName = '';
+    let isAegis = false;
+    let aegisHover = null;
     if(d.outcome === 1) {
+      if(d.lpDiff > 40 && d.placement === -1 && currentSort.id >= 16) {
+        isAegis = true;
+        aegisHover = '!border-[#fce48d]';
+      }
       newEl.id = d.match_id;
-      newEl.className = 'card win';
+      newEl.className = `card win ${isAegis ? '!border-[#DEB42B]' : ''}`;
       hoverClassName = 'winHover';
-      lpDiff = `(+${d.lpDiff})`;
+      lpDiff = `(+${d.lpDiff}${isAegis ? '<img class="align-middle inline max-w-none" src="assets/aegis.svg"/>' : ''})`;
       position = 'bg-[#2e3044]';
     } else if (d.outcome === 0) {
+      if(d.lpDiff === 0 && d.lp > 0 && d.placement === -1 && currentSort.id >= 16) {
+        isAegis = true;
+        aegisHover = '!border-[#fce48d]';
+      }
       newEl.id = d.match_id;
-      newEl.className = 'card lose';
-      hoverClassName = 'loseHover';
-      lpDiff = `(${d.lpDiff})`;
+      newEl.className = `card lose ${isAegis ? '!border-[#DEB42B]' : ''}`;
+      hoverClassName = `loseHover`;
+      lpDiff = `(${d.lpDiff}${isAegis ? '<img class="align-middle inline max-w-none" src="assets/aegis.svg"/>' : ''})`;
       position = 'bg-[#453030]';
     } else if (d.outcome === 2 && d.lpDiff === 0) {
       newEl.id = d.match_id;
@@ -393,7 +403,7 @@ const initCards = (allData, champInfo, versions) => {
       lpDiff = '';
     let date = new Date(d.timestamp);
     
-    let kda = d.lpDiff < -15 ? 'Decay' : 'Dodge';
+    let kda = [-3, -5, -15, -20].includes(d.lpDiff) ? 'Dodge' : 'Decay';
     let cs = '', champion = '', lp = '';
     if(d.outcome !== 3) {
       kda = '';
@@ -474,7 +484,7 @@ const initCards = (allData, champInfo, versions) => {
       </div>
     `;
     newEl.addEventListener('mouseenter', event => {
-      newEl.classList.add(hoverClassName);
+      newEl.classList.add(hoverClassName, aegisHover);
       userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => {
           if(ctx.p1.raw.match_id === d.match_id)
@@ -500,7 +510,7 @@ const initCards = (allData, champInfo, versions) => {
       updateGraphIfNoOtherRequest();
     });
     newEl.addEventListener('mouseleave', event => {
-      newEl.classList.remove(hoverClassName);
+      newEl.classList.remove(hoverClassName, aegisHover);
       userDatasets.forEach(dataset => {
         dataset.segment.borderColor = (ctx) => ctx.p1.raw.color;
         dataset.pointBackgroundColor = dataset.data.map(data => data.color);
@@ -610,19 +620,27 @@ const refreshSessions = (summoner) => {
 const setSessionDiv = (session) => {
   let wins = 0;
   let loses = 0;
+  let lp = 0;
   for(let key in session.details) {
     if(session.notHiddenSummoners.includes(key)) {
       wins += session.details[key].wins;
       loses += session.details[key].loses;
+      lp += session.details[key].lpGained;
     }
   }
+  let lpSign = lp >= 0 ? '+' : '&minus;';
   session.element.children[0].innerHTML = `
-    <div class="inline-flex items-center">
+    <div class="inline-flex items-center text-[16px]">
       <span>SESSION: ${wins}</span>
-      <span class="my-0 mx-[1px] text-[16px] font-normal opacity-40">/</span>
+      <span class="my-0 mx-[1px] text-[14px] font-normal opacity-40">/</span>
       <span>${loses}</span>
-      <span class="my-0 mx-[6px] text-[16px] font-normal opacity-40">&mdash;</span>
-      <span>${(wins / (wins + loses) * 100).toFixed(1)}%</span>
+      <span class="my-0 mx-[8px] text-[14px] font-normal opacity-40">&mdash;</span>
+      <span>${(wins / (wins + loses) * 100).toFixed(1)}</span>
+      <span class="my-0 ml-[2px] text-[14px] font-normal opacity-80">%</span>
+      <span class="my-0 mx-[8px] text-[14px] font-normal opacity-40">&mdash;</span>
+      <span class="my-0 text-[14px] font-normal">${lpSign}</span>
+      <span class="ml-[2px]">${Math.abs(lp)}</span>
+      <span class="my-0 ml-[4px] text-[14px] font-normal opacity-80">LP</span>
     </div>
   `;
 };
@@ -754,12 +772,14 @@ const formatData1 = (isOldSeason) => {
         session.details[d.name] = {
           wins: 0,
           loses: 0,
+          lpGained: 0,
         };
         session.summoners.push(d.name);
       }
       
       session.details[d.name].wins += d.outcome === 1 ? 1 : 0;
       session.details[d.name].loses += d.outcome === 0 ? 1 : 0;
+      session.details[d.name].lpGained += d.lpDiff;
     }
   });
   return allData;
@@ -1256,7 +1276,7 @@ const initChart = () => {
                   `;
                 }
                 
-                let displayChampion = tooltipLpDiff < -15 ? `<div">Decay</div>` : `<div">Dodge</div>`;
+                let displayChampion = [-3, -5, -15, -20].includes(tooltipLpDiff) ? '<div">Dodge</div>' : '<div">Decay</div>';
                 if(tooltipOutcome !== 3) {
                   displayChampion = `
                     <img class="w-[17px] h-[17px] mr-[2px] rounded-[4px] max-w-none" src="assets/icon-position-${tooltipLane.toLowerCase()}.png" />
