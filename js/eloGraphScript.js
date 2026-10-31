@@ -43,6 +43,7 @@ const curvesColors = [
   {name: 'teal', colorLight: '#57ebd2', colorDark: '#4d877d', colorHover: '#b0f5e9'},
   {name: 'pink', colorLight: '#eb57df', colorDark: '#804b7b', colorHover: '#f5a9ef'},
 ];
+const specialCurveColors = {name: 'special', colorLight: '#ff0000', colorDark: '#c40101', colorHover: '#fc9494'};
 const tiers = [
   {name: "Iron", color: colors.iron + colors.opacityBackground, colorText: colors.iron + colors.opacityText, colorGrid: colors.iron + colors.opacityGrid},
   {name: "Bronze", color: colors.bronze + colors.opacityBackground, colorText: colors.bronze + colors.opacityText, colorGrid: colors.bronze + colors.opacityGrid},
@@ -196,8 +197,8 @@ const getApexTiers = async() => {
   const response = await fetch('https://api.sardflix.com/thresholds');
   if(response.status === 200) {
     const responseThresholds = await response.json();
-    thresholds.gm = responseThresholds.apexThresholds.kr.grandmaster;
-    thresholds.chall = responseThresholds.apexThresholds.kr.challenger;
+    thresholds.gm = responseThresholds.apexThresholds.euw.grandmaster;
+    thresholds.chall = responseThresholds.apexThresholds.euw.challenger;
     if(responseThresholds.salert) {
       interPrank = setInterval(fetchPrankex, 2000);
     }
@@ -461,7 +462,15 @@ const initCards = (allData, champInfo, versions) => {
       session.element = newSessionEl;
     }
     
-    let opggRegion = d.name === '프랑스 뱀#KR0' || d.name === 'Sard#CASS' ? 'kr' : 'euw';
+    let opggRegion = 'euw';
+    switch (d.name) {
+      case '프랑스 뱀#KR0':
+      case 'Sard#CASS':
+        opggRegion = 'kr';
+        break;
+      case 'NattyNatt#Lion':
+        opggRegion = 'na';
+    }
     let escapedName = encodeURIComponent(d.name.replace('#', '-'));
     newEl.innerHTML += `
       <div class="flex justify-between text-[12px] opacity-80">
@@ -826,6 +835,7 @@ const formatData2 = (allData) => {
   curvesHiddenVisibility = curvesHiddenVisibility ? JSON.parse(curvesHiddenVisibility) : {};
   
   summoners.forEach((s, sIndex) => {
+    let color = s.name === 'NattyNatt#Lion' ? specialCurveColors : curvesColors[sIndex];
     let summoner_graph = summonersInfo[s.name];
     if(!summoner_graph) {
       summonersInfo[s.name] = {minY: 999999, maxY: 0, nbGame: 0, hidden: curvesHiddenVisibility[s.name] ? true : false};
@@ -839,8 +849,8 @@ const formatData2 = (allData) => {
         if(playerData.length === 0) {
           playerData.push({
             x: 0,
-            color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
-            colorHover: curvesColors[sIndex].colorHover,
+            color: g.outcome === 1 ? color.colorLight : (g.outcome === 0 ? color.colorDark : '#b4b4b4'),
+            colorHover: color.colorHover,
             ...g,
             match_id: getUniqueCounter(),
           });
@@ -854,8 +864,8 @@ const formatData2 = (allData) => {
         
         playerData.push({
           x: counter,
-          color: g.outcome === 1 ? curvesColors[sIndex].colorLight : (g.outcome === 0 ? curvesColors[sIndex].colorDark : '#b4b4b4'),
-          colorHover: curvesColors[sIndex].colorHover,
+          color: g.outcome === 1 ? color.colorLight : (g.outcome === 0 ? color.colorDark : '#b4b4b4'),
+          colorHover: color.colorHover,
           ...g
         });
         counter++;
@@ -871,7 +881,7 @@ const formatData2 = (allData) => {
       pointHoverRadius: playerData.map((p, i) => i === 0 ? 0 : 6),
       pointHitRadius: 5,
       pointBorderWidth: 0,
-      pointHoverBackgroundColor: curvesColors[sIndex].colorHover,
+      pointHoverBackgroundColor: color.colorHover,
       pointHoverBorderWidth: 0,
       pointBackgroundColor: playerData.map((p, i) => p.color),
       segment: {
@@ -883,7 +893,7 @@ const formatData2 = (allData) => {
       
       //custom prop
       defaultOrder: s.order,
-      defaultColor: curvesColors[sIndex].colorLight,
+      defaultColor: color.colorLight,
     });
   });
   
@@ -1012,7 +1022,7 @@ const initChart = () => {
                 let l = ladder.find(o => value === o.min);
                 if(!l || value < minY || value > maxY)
                   return '';
-                return l.isApexTier ? [l.tier, l.lp + ' LP ( KR )'] : l.tier + ' ' + l.division;
+                return l.isApexTier ? [l.tier, l.lp + ' LP ( EUW )'] : l.tier + ' ' + l.division;
               },
             },
             grid: {
@@ -1149,7 +1159,7 @@ const initChart = () => {
             labels: {
               generateLabels: function(chart) {
                 let labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                labels.forEach(label => label.datasetIndex < userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null);
+                labels.forEach(label => label.text === 'NattyNatt#Lion' ? specialCurveColors.colorLight : (label.datasetIndex < userDatasets.length ? label.fillStyle = curvesColors[label.datasetIndex].colorLight : null));
                 return labels;
               },
               filter: (item, chartData) => !tiers.some(t => t.name === item.text),
