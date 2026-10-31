@@ -97,6 +97,7 @@ let staticMaxX = 0;
 let masterY = 0;
 let isApexReady = false;
 let numberOfUpdates = 0;
+let region = 'euw';
 
 const getUniqueCounter = () => {
   return "" + uniqueCounter++;
@@ -197,8 +198,9 @@ const getApexTiers = async() => {
   const response = await fetch('https://api.sardflix.com/thresholds');
   if(response.status === 200) {
     const responseThresholds = await response.json();
-    thresholds.gm = responseThresholds.apexThresholds.euw.grandmaster;
-    thresholds.chall = responseThresholds.apexThresholds.euw.challenger;
+    region = responseThresholds.apexThresholds.current;
+    thresholds.gm = responseThresholds.apexThresholds[region].grandmaster;
+    thresholds.chall = responseThresholds.apexThresholds[region].challenger;
     if(responseThresholds.salert) {
       interPrank = setInterval(fetchPrankex, 2000);
     }
@@ -1022,7 +1024,7 @@ const initChart = () => {
                 let l = ladder.find(o => value === o.min);
                 if(!l || value < minY || value > maxY)
                   return '';
-                return l.isApexTier ? [l.tier, l.lp + ' LP ( EUW )'] : l.tier + ' ' + l.division;
+                return l.isApexTier ? [l.tier, `${l.lp} LP ( ${region === 'kr' ? 'KR' : 'EUW'} )`] : `${l.tier} ${l.division}`;
               },
             },
             grid: {
