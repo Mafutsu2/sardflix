@@ -88,6 +88,7 @@ let yTicks = [];
 let xTicksStep = 1;
 let summonersInfo = {};
 let ladder = [];
+let reverseLadder = [];
 let ladderCounter = 0;
 let uniqueCounter = 0;
 let minY = 0;
@@ -228,6 +229,7 @@ const getApexTiers = async() => {
   });
   masterY = ladderCounter;
   maxY = ladder[ladder.length - 1].max;
+  reverseLadder = ladder.toReversed();
   
   const gm = ladder.find(l => l.tier === 'Grandmaster')?.min;
   const chall = ladder.find(l => l.tier === 'Challenger')?.min;
@@ -1021,10 +1023,20 @@ const initChart = () => {
                 return found && found.colorText ? found.colorText : 'rgb(200, 200, 200)';
               },
               callback: function(value, index, ticks) {
-                let l = ladder.find(o => value === o.min);
-                if(!l || value < minY || value > maxY)
+                let l = reverseLadder.find(o => value >= o.min);
+                if(!l || value < minY || value > maxY)// null or out of bounds
                   return '';
-                return l.isApexTier ? [l.tier, `${l.lp} LP ( ${region === 'kr' ? 'KR' : 'EUW'} )`] : `${l.tier} ${l.division}`;
+                if(value !== l.min && (Math.abs(value - l.min) < 150 || Math.abs(value - l.max) < 150))// too close to gm/chall ticks
+                  return '';
+                if(l.isApexTier) {
+                  const lp = value - masterY;
+                  if(value !== l.min && value % 200 === 0)
+                    return `${lp} LP`;
+                  else if(value === l.min)
+                    return [l.tier, l.lp === 0 ? `( ${region === 'kr' ? 'KR' : 'EUW'} )` : `${lp} LP`];
+                  return '';
+                }
+                return `${l.tier} ${l.division}`;
               },
             },
             grid: {
