@@ -467,6 +467,7 @@ const initCards = (allData, champInfo, versions) => {
     }
     
     let opggRegion = 'euw';
+    let shownName = d.name;
     switch (d.name) {
       case '프랑스 뱀#KR0':
       case 'Sard#CASS':
@@ -474,11 +475,12 @@ const initCards = (allData, champInfo, versions) => {
         break;
       case 'NattyNatt#Lion':
         opggRegion = 'na';
+        shownName = `🚨 ${d.name} 🚨`;
     }
     let escapedName = encodeURIComponent(d.name.replace('#', '-'));
     newEl.innerHTML += `
       <div class="flex justify-between text-[12px] opacity-80">
-        <div class="cursor-pointer transition-colors duration-200 ease-out hover:text-white" onclick="openOPGG('https://www.op.gg/summoners/${opggRegion}/${escapedName}')">${d.name}</div>
+        <div class="cursor-pointer transition-colors duration-200 ease-out hover:text-white" onclick="openOPGG('https://www.op.gg/summoners/${opggRegion}/${escapedName}')">${shownName}</div>
         <div>${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}</div>
       </div>
       <div class="flex grow text-[14px]">
