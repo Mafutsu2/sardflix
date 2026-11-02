@@ -828,6 +828,7 @@ const formatData2 = (allData) => {
   });
   
   //find the order accounts were last played on to not have an old curve overlaping a new one
+  //except for NattyNatt who should always be in front
   summoners.forEach(s1 => {
     let count = 2;
     if(s1.name === 'NattyNatt#Lion') {
