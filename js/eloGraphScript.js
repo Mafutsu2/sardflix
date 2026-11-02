@@ -743,7 +743,7 @@ const formatData1 = (isOldSeason) => {
     });
     
     //champions stats
-    if(g.is_victory <= 1) {
+    if(g.name !== 'NattyNatt#Lion' && g.is_victory <= 1) {
       let cInfo = champInfo.find(c => c.id === g.champion_id);
       if(!cInfo) {
         let cIndex = champInfo.push({
@@ -828,8 +828,13 @@ const formatData2 = (allData) => {
   });
   
   //find the order accounts were last played on to not have an old curve overlaping a new one
+  //except for NattyNatt who should always be in front
   summoners.forEach(s1 => {
-    let count = 1;
+    let count = 2;
+    if(s1.name === 'NattyNatt#Lion') {
+      s1.order = 1;
+      return;
+    }
     summoners.forEach(s2 => {
       if(s1.lastIndex < s2.lastIndex)
         count++;
