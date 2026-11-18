@@ -216,7 +216,7 @@ const getApexTiers = async() => {
       apexMax = thresholds.chall - 1;
     } else if(t.name === 'Challenger') {
       apexMin = thresholds.chall;
-      apexMax = 2300;
+      apexMax = 4800;
     }
     if(isApexTier(t.name)) {
       ladder.push({min: ladderCounter + apexMin, max: ladderCounter + apexMax, tier: t.name, division: 'I', lp: apexMin, isApexTier: true, color: t.color, color2: t.color2, colorText: t.colorText, colorGrid: t.colorGrid});
@@ -233,7 +233,7 @@ const getApexTiers = async() => {
   
   const gm = ladder.find(l => l.tier === 'Grandmaster')?.min;
   const chall = ladder.find(l => l.tier === 'Challenger')?.min;
-  for(let i = 0; i < 5000; i += 100) {
+  for(let i = 0; i < (apexMax + masterY); i += 100) {
     yTicks.push({value: i});
     if(gm > i && gm < i + 100)
       yTicks.push({value: gm});
